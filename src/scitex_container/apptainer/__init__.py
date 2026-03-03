@@ -8,13 +8,18 @@ from ._command_builder import (
     build_dev_pythonpath,
     build_exec_args,
     build_host_mount_binds,
+    build_instance_start_script,
+    build_sbatch_command,
+    build_shell_in_allocation_command,
     build_srun_command,
 )
 from ._freeze import freeze
+from ._sandbox import configure_ps1 as sandbox_configure_ps1
 from ._sandbox import create as sandbox_create
 from ._sandbox import is_sandbox
 from ._sandbox import maintain as sandbox_maintain
 from ._sandbox import to_sif as sandbox_to_sif
+from ._sandbox import update as sandbox_update
 from ._status import status
 from ._utils import detect_container_cmd, find_containers_dir
 from ._verify import verify
@@ -26,6 +31,14 @@ from ._versioning import (
     rollback,
     switch_version,
 )
+from ._sandbox_versioning import (
+    cleanup_sandboxes,
+    cleanup_sifs,
+    get_active_sandbox,
+    list_sandboxes,
+    rollback_sandbox,
+    switch_sandbox,
+)
 
 __all__ = [
     # build
@@ -34,8 +47,17 @@ __all__ = [
     "sandbox_create",
     "sandbox_maintain",
     "sandbox_to_sif",
+    "sandbox_configure_ps1",
+    "sandbox_update",
     "is_sandbox",
-    # versioning
+    # sandbox versioning
+    "list_sandboxes",
+    "get_active_sandbox",
+    "switch_sandbox",
+    "rollback_sandbox",
+    "cleanup_sandboxes",
+    "cleanup_sifs",
+    # SIF versioning
     "list_versions",
     "get_active_version",
     "switch_version",
@@ -45,6 +67,9 @@ __all__ = [
     # command builder
     "build_exec_args",
     "build_srun_command",
+    "build_instance_start_script",
+    "build_sbatch_command",
+    "build_shell_in_allocation_command",
     "build_dev_pythonpath",
     "build_host_mount_binds",
     # freeze / status / verify
