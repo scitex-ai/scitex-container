@@ -185,6 +185,8 @@ def build_exec_args(
         "--env",
         f"SCITEX_PROJECT={project_slug}",
         "--env",
+        f"SCITEX_PROJECT_DIR=/home/{username}/proj/{project_slug}",
+        "--env",
         f"SCITEX_USER={username}",
         "--env",
         f"USER={username}",
@@ -356,6 +358,7 @@ def build_shell_in_allocation_command(
     job_id: str,
     instance_name: str,
     username: str = "",
+    project_slug: str = "",
 ) -> list[str]:
     """Build ``srun --overlap`` command to attach a shell inside an existing allocation.
 
@@ -367,12 +370,18 @@ def build_shell_in_allocation_command(
         Name of the apptainer instance to exec into.
     username : str
         Username for the shell session (used for user identity setup).
+    project_slug : str
+        Project slug for setting the working directory.
 
     Returns
     -------
     list[str]
         Command list ready for ``os.execvpe`` or ``pty.fork``.
     """
+    pwd_args: list[str] = []
+    if username and project_slug:
+        pwd_args = ["--pwd", f"/home/{username}/proj/{project_slug}"]
+
     return [
         "srun",
         "--pty",
@@ -380,6 +389,7 @@ def build_shell_in_allocation_command(
         f"--jobid={job_id}",
         "apptainer",
         "exec",
+        *pwd_args,
         f"instance://{instance_name}",
         *_build_shell_command(username),
     ]
