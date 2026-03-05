@@ -340,7 +340,7 @@ def build_sbatch_command(
     list[str]
         Command list ready for ``subprocess.run()``.
     """
-    job_name = f"scitex_{username}_{project_slug}" if username else instance_name
+    job_name = f"scitex-cloud-terminal-{username}" if username else instance_name
     return [
         "sbatch",
         "--parsable",
