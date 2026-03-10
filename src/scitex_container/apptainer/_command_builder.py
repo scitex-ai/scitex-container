@@ -396,31 +396,17 @@ def build_shell_in_allocation_command(
 
 
 def _build_shell_command(username: str) -> list[str]:
-    """Build the shell entry command with proper user identity setup.
+    """Build shell entry with user identity fix in writable-tmpfs overlay.
 
-    When running as root (UID 0) inside the container — which happens when
-    the broker/Django process runs as root — this creates a proper user
-    identity in ``/etc/passwd`` and switches to that user via ``su``.
-    The ``--writable-tmpfs`` overlay makes ``/etc/passwd`` writable.
-
-    Parameters
-    ----------
-    username : str
-        Target username for the shell session.
-
-    Returns
-    -------
-    list[str]
-        Command list to append after the container path in apptainer exec.
+    Edits ``/etc/passwd`` so ``whoami``/``id`` return *username*, regardless
+    of whether the process runs as root or a non-root UID (e.g. SLURM user).
     """
-    # If running as root but $USER is set to a non-root name, replace the
-    # root passwd entry so that whoami/id return the correct username.
-    # We can't use `su` because PAM requires the user in host passwd.
-    # Instead we edit /etc/passwd in the writable-tmpfs overlay to map
-    # UID 0 to $USER.  This makes whoami, id, and $HOME all consistent.
     setup_script = (
-        'if [ "$(id -u)" = "0" ] && [ -n "$USER" ] && [ "$USER" != "root" ]; then '
-        '  sed -i "s|^root:[^:]*:0:0:[^:]*:[^:]*:|$USER:x:0:0:$USER:/home/$USER:|" /etc/passwd 2>/dev/null; '
+        "_UID=$(id -u); "
+        '_CUR=$(getent passwd "$_UID" 2>/dev/null | cut -d: -f1); '
+        'if [ -n "$USER" ] && [ -n "$_CUR" ] && [ "$USER" != "$_CUR" ]; then '
+        '  sed -i "s|^${_CUR}:[^:]*:${_UID}:|${USER}:x:${_UID}:|; '
+        '          s|:/home/${_CUR}:|:/home/${USER}:|" /etc/passwd 2>/dev/null; '
         "fi; "
         "exec /bin/bash -l"
     )
