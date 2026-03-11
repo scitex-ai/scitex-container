@@ -185,6 +185,8 @@ def build_exec_args(
         "--env",
         f"SCITEX_PROJECT={project_slug}",
         "--env",
+        f"SCITEX_PROJECT_DIR=/home/{username}/proj/{project_slug}",
+        "--env",
         f"SCITEX_USER={username}",
         "--env",
         f"USER={username}",
@@ -338,7 +340,7 @@ def build_sbatch_command(
     list[str]
         Command list ready for ``subprocess.run()``.
     """
-    job_name = f"scitex_{username}_{project_slug}" if username else instance_name
+    job_name = f"scitex-cloud-terminal-{username}" if username else instance_name
     return [
         "sbatch",
         "--parsable",
@@ -356,6 +358,7 @@ def build_shell_in_allocation_command(
     job_id: str,
     instance_name: str,
     username: str = "",
+    project_slug: str = "",
 ) -> list[str]:
     """Build ``srun --overlap`` command to attach a shell inside an existing allocation.
 
@@ -367,12 +370,18 @@ def build_shell_in_allocation_command(
         Name of the apptainer instance to exec into.
     username : str
         Username for the shell session (used for user identity setup).
+    project_slug : str
+        Project slug for setting the working directory.
 
     Returns
     -------
     list[str]
         Command list ready for ``os.execvpe`` or ``pty.fork``.
     """
+    pwd_args: list[str] = []
+    if username and project_slug:
+        pwd_args = ["--pwd", f"/home/{username}/proj/{project_slug}"]
+
     return [
         "srun",
         "--pty",
@@ -380,37 +389,24 @@ def build_shell_in_allocation_command(
         f"--jobid={job_id}",
         "apptainer",
         "exec",
+        *pwd_args,
         f"instance://{instance_name}",
         *_build_shell_command(username),
     ]
 
 
 def _build_shell_command(username: str) -> list[str]:
-    """Build the shell entry command with proper user identity setup.
+    """Build shell entry with user identity fix in writable-tmpfs overlay.
 
-    When running as root (UID 0) inside the container — which happens when
-    the broker/Django process runs as root — this creates a proper user
-    identity in ``/etc/passwd`` and switches to that user via ``su``.
-    The ``--writable-tmpfs`` overlay makes ``/etc/passwd`` writable.
-
-    Parameters
-    ----------
-    username : str
-        Target username for the shell session.
-
-    Returns
-    -------
-    list[str]
-        Command list to append after the container path in apptainer exec.
+    Edits ``/etc/passwd`` so ``whoami``/``id`` return *username*, regardless
+    of whether the process runs as root or a non-root UID (e.g. SLURM user).
     """
-    # If running as root but $USER is set to a non-root name, replace the
-    # root passwd entry so that whoami/id return the correct username.
-    # We can't use `su` because PAM requires the user in host passwd.
-    # Instead we edit /etc/passwd in the writable-tmpfs overlay to map
-    # UID 0 to $USER.  This makes whoami, id, and $HOME all consistent.
     setup_script = (
-        'if [ "$(id -u)" = "0" ] && [ -n "$USER" ] && [ "$USER" != "root" ]; then '
-        '  sed -i "s|^root:[^:]*:0:0:[^:]*:[^:]*:|$USER:x:0:0:$USER:/home/$USER:|" /etc/passwd 2>/dev/null; '
+        "_UID=$(id -u); "
+        '_CUR=$(getent passwd "$_UID" 2>/dev/null | cut -d: -f1); '
+        'if [ -n "$USER" ] && [ -n "$_CUR" ] && [ "$USER" != "$_CUR" ]; then '
+        '  sed -i "s|^${_CUR}:[^:]*:${_UID}:|${USER}:x:${_UID}:|; '
+        '          s|:/home/${_CUR}:|:/home/${USER}:|" /etc/passwd 2>/dev/null; '
         "fi; "
         "exec /bin/bash -l"
     )
