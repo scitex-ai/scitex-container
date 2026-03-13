@@ -21,12 +21,22 @@ dependencies = [
 
 [project.optional-dependencies]
 mcp = ["fastmcp>=2.0.0"]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=2.0",
+    "sphinx-copybutton>=0.5",
+    "sphinx-autodoc-typehints>=1.25",
+]
 dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
-all = ["fastmcp>=2.0.0", "pytest>=7.0.0", "pytest-cov>=4.0.0"]
+all = ["scitex-container[mcp,docs,dev]"]
 
 [project.scripts]
 scitex-container = "scitex_container._cli:main"
 scitex-container-mcp = "scitex_container.mcp_server:main"
+
+[project.entry-points."scitex_dev.docs"]
+scitex-container = "scitex_container"
 
 [project.urls]
 Homepage = "https://github.com/ywatanabe1989/scitex-container"
