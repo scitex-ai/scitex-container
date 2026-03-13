@@ -54,7 +54,7 @@ def _show_apptainer_status() -> None:
     if current_link.is_symlink():
         target = current_link.resolve()
         if target.is_dir():
-            click.secho(f"  Mode:    sandbox", fg="yellow", bold=True)
+            click.secho("  Mode:    sandbox", fg="yellow", bold=True)
             click.secho(f"  Active:  {target.name}/", fg="green")
         elif active:
             click.secho("  Mode:    SIF", bold=True)

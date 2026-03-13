@@ -12,7 +12,6 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ._sandbox import is_sandbox
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +150,6 @@ def build_exec_args(
     list[str]
         Flat list starting with ``["apptainer", "exec", ...]``.
     """
-    sandbox = is_sandbox(container_path)
     dev_repos = dev_repos or []
 
     # Dev repo bind mounts
