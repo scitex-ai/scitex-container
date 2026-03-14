@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ _TEXLIVE_SHARE_DIRS = [
 ]
 
 
+@supports_return_as
 def build_dev_pythonpath(dev_repos: list[dict]) -> str:
     """Build a PYTHONPATH string that prepends ``/opt/dev/{name}/src`` for each dev repo.
 
@@ -54,6 +56,7 @@ def build_dev_pythonpath(dev_repos: list[dict]) -> str:
     return ":".join(parts)
 
 
+@supports_return_as
 def build_host_mount_binds(
     host_mounts: list[dict] | None = None,
     texlive_prefix: str = "",
@@ -104,6 +107,7 @@ def build_host_mount_binds(
     return bind_args
 
 
+@supports_return_as
 def build_exec_args(
     container_path: str,
     username: str,
@@ -212,6 +216,7 @@ def build_exec_args(
     return args
 
 
+@supports_return_as
 def build_instance_start_script(
     container_path: str,
     username: str,
@@ -300,6 +305,7 @@ echo "INSTANCE_STOPPED"
     return script
 
 
+@supports_return_as
 def build_sbatch_command(
     instance_name: str,
     script_path: str,
@@ -350,6 +356,7 @@ def build_sbatch_command(
     ]
 
 
+@supports_return_as
 def build_shell_in_allocation_command(
     job_id: str,
     instance_name: str,
@@ -415,6 +422,7 @@ def _build_shell_command(username: str) -> list[str]:
     return ["/bin/bash", "-c", setup_script]
 
 
+@supports_return_as
 def build_srun_command(
     container_path: str,
     username: str,

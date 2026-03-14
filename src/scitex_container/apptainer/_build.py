@@ -10,11 +10,14 @@ import logging
 import subprocess
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 from ._utils import detect_container_cmd, find_containers_dir
 
 logger = logging.getLogger(__name__)
 
 
+@supports_return_as
 def build(
     def_name: str = "scitex-cloud-shared-v0.1.0",
     output_dir: str | Path | None = None,

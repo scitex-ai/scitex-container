@@ -12,11 +12,12 @@ requires-python = ">=3.10"
 authors = [
     { name = "Yusuke Watanabe", email = "ywatanabe@scitex.ai" },
 ]
-keywords = ["apptainer", "singularity", "docker", "container", "sandbox", "mcp"]
+keywords = ["scitex", "apptainer", "singularity", "docker", "container", "sandbox", "mcp"]
 
 dependencies = [
     "click",
     "packaging",
+    "scitex-dev>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -40,6 +41,7 @@ scitex-container = "scitex_container"
 
 [project.urls]
 Homepage = "https://github.com/ywatanabe1989/scitex-container"
+Documentation = "https://scitex-container.readthedocs.io"
 Repository = "https://github.com/ywatanabe1989/scitex-container.git"
 
 [tool.hatch.build.targets.wheel]
@@ -49,3 +51,14 @@ packages = ["src/scitex_container"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["scitex_container"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "if TYPE_CHECKING:",
+]

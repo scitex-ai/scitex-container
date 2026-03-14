@@ -9,11 +9,14 @@ import logging
 import subprocess
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 from ._utils import detect_container_cmd
 
 logger = logging.getLogger(__name__)
 
 
+@supports_return_as
 def is_sandbox(path: str | Path) -> bool:
     """Check if path is a sandbox directory (not a SIF image).
 
@@ -34,6 +37,7 @@ def is_sandbox(path: str | Path) -> bool:
     return not str(path).rstrip("/").endswith(".sif")
 
 
+@supports_return_as
 def create(
     source: str | Path,
     containers_dir: str | Path | None = None,
@@ -121,6 +125,7 @@ def _update_sandbox_symlink(containers_dir: Path, sandbox_dir: Path) -> None:
     logger.info("Symlink updated: current-sandbox -> %s", target_name)
 
 
+@supports_return_as
 def configure_ps1(sandbox_dir: str | Path, default_ps1: str = r"\W $ ") -> None:
     r"""Set PS1 prompt in a sandbox's environment script.
 
@@ -164,6 +169,7 @@ def configure_ps1(sandbox_dir: str | Path, default_ps1: str = r"\W $ ") -> None:
     )
 
 
+@supports_return_as
 def maintain(sandbox_dir: str | Path, command: list[str]) -> int:
     """Run a command inside a sandbox with --writable --fakeroot flags.
 
@@ -245,6 +251,7 @@ def _resolve_pkg_dir(pkg: str, proj_root: Path) -> Path | None:
     return None
 
 
+@supports_return_as
 def update(
     sandbox_dir: str | Path,
     *,
@@ -337,6 +344,7 @@ def update(
     return results
 
 
+@supports_return_as
 def to_sif(sandbox_dir: str | Path, output_sif: str | Path) -> Path:
     """Convert a sandbox directory back to a SIF image.
 

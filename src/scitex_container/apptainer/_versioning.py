@@ -15,6 +15,8 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 logger = logging.getLogger(__name__)
 
 _VERSION_RE = re.compile(r"^scitex-v(.+)\.sif$")
@@ -48,6 +50,7 @@ def _versioned_sifs(containers_dir: Path) -> list[Path]:
     return sifs
 
 
+@supports_return_as
 def list_versions(containers_dir: Path) -> list[dict]:
     """List all versioned SIFs with metadata.
 
@@ -86,6 +89,7 @@ def list_versions(containers_dir: Path) -> list[dict]:
     return results
 
 
+@supports_return_as
 def get_active_version(containers_dir: Path) -> str | None:
     """Read current.sif symlink to determine active version.
 
@@ -110,6 +114,7 @@ def get_active_version(containers_dir: Path) -> str | None:
     return _parse_version(target)
 
 
+@supports_return_as
 def switch_version(
     version: str,
     containers_dir: Path,
@@ -163,6 +168,7 @@ def switch_version(
     logger.info("Switched to version %s", version)
 
 
+@supports_return_as
 def rollback(
     containers_dir: Path,
     use_sudo: bool = False,
@@ -211,6 +217,7 @@ def rollback(
     return previous
 
 
+@supports_return_as
 def deploy(
     source_dir: Path,
     target_dir: Path = Path("/opt/scitex/singularity"),
@@ -275,6 +282,7 @@ def deploy(
     logger.info("Deploy complete: version %s", active)
 
 
+@supports_return_as
 def cleanup(
     containers_dir: Path,
     keep: int = 3,

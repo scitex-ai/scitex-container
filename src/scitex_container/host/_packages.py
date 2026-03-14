@@ -9,6 +9,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 # ---------------------------------------------------------------------------
 # Package root resolution
 # ---------------------------------------------------------------------------
@@ -49,6 +51,7 @@ def _find_version(cmd: str) -> str:
         return ""
 
 
+@supports_return_as
 def check_packages() -> dict:
     """Check which host packages are installed.
 
@@ -94,6 +97,7 @@ def check_packages() -> dict:
     return result
 
 
+@supports_return_as
 def install_packages(
     texlive: bool = False,
     imagemagick: bool = False,

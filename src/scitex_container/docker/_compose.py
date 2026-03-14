@@ -8,6 +8,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -99,6 +101,7 @@ def _run(cmd: list[str], cwd: Path) -> int:
 # ---------------------------------------------------------------------------
 
 
+@supports_return_as
 def rebuild(env: str = "dev", project_dir: str | Path | None = None) -> int:
     """Rebuild Docker containers without using the cache.
 
@@ -125,6 +128,7 @@ def rebuild(env: str = "dev", project_dir: str | Path | None = None) -> int:
     return _run(cmd, cwd=cwd)
 
 
+@supports_return_as
 def restart(env: str = "dev", project_dir: str | Path | None = None) -> int:
     """Restart Docker containers (down then up).
 
@@ -161,6 +165,7 @@ def restart(env: str = "dev", project_dir: str | Path | None = None) -> int:
     )
 
 
+@supports_return_as
 def status(env: str = "dev", project_dir: str | Path | None = None) -> dict:
     """Get Docker container status for the given compose environment.
 
