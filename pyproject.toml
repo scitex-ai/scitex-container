@@ -39,6 +39,9 @@ scitex-container-mcp = "scitex_container.mcp_server:main"
 [project.entry-points."scitex_dev.docs"]
 scitex-container = "scitex_container"
 
+[project.entry-points."scitex_dev.skills"]
+scitex-container = "scitex_container"
+
 [project.urls]
 Homepage = "https://github.com/ywatanabe1989/scitex-container"
 Documentation = "https://scitex-container.readthedocs.io"
@@ -46,6 +49,9 @@ Repository = "https://github.com/ywatanabe1989/scitex-container.git"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/scitex_container"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/scitex_container/skills" = "scitex_container/skills"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
