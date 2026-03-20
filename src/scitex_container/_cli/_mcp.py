@@ -102,10 +102,9 @@ def list_tools(verbose: int):
         raise SystemExit(1)
 
     # Collect tools via FastMCP internal registry
-    try:
-        tools_map = mcp_server._tool_manager._tools
-    except AttributeError:
-        tools_map = getattr(mcp_server, "_tools", {})
+    from scitex_dev import get_tools_sync
+
+    tools_map = get_tools_sync(mcp_server)
 
     if not tools_map:
         click.secho("No tools registered (or unable to inspect).", fg="yellow")
@@ -191,10 +190,9 @@ def doctor(verbose: bool):
         from scitex_container.mcp_server import mcp as mcp_server
 
         if mcp_server is not None:
-            try:
-                tools_map = mcp_server._tool_manager._tools
-            except AttributeError:
-                tools_map = getattr(mcp_server, "_tools", {})
+            from scitex_dev import get_tools_sync
+
+            tools_map = get_tools_sync(mcp_server)
             n = len(tools_map)
             if n >= 10:
                 click.secho(f"OK ({n} tools)", fg="green")
