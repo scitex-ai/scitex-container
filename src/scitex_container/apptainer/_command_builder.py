@@ -278,6 +278,12 @@ def build_instance_start_script(
     # then replace "exec" with "instance start" and append instance_name.
     # The container_path is the last element.
     flags = exec_args[2:-1]  # Skip "apptainer", "exec", and final container_path
+    # --pwd is exec/run-only; strip it and its value for instance start
+    flags = [
+        f
+        for i, f in enumerate(flags)
+        if f != "--pwd" and (i == 0 or flags[i - 1] != "--pwd")
+    ]
     import shlex
 
     flags_str = " ".join(shlex.quote(f) for f in flags)
@@ -391,31 +397,18 @@ def build_shell_in_allocation_command(
 
 
 def _build_shell_command(username: str) -> list[str]:
-    """Build the shell entry command with proper user identity setup.
-
-    When running as root (UID 0) inside the container — which happens when
-    the broker/Django process runs as root — this creates a proper user
-    identity in ``/etc/passwd`` and switches to that user via ``su``.
-    The ``--writable-tmpfs`` overlay makes ``/etc/passwd`` writable.
-
-    Parameters
-    ----------
-    username : str
-        Target username for the shell session.
-
-    Returns
-    -------
-    list[str]
-        Command list to append after the container path in apptainer exec.
-    """
-    # If running as root but $USER is set to a non-root name, replace the
-    # root passwd entry so that whoami/id return the correct username.
-    # We can't use `su` because PAM requires the user in host passwd.
-    # Instead we edit /etc/passwd in the writable-tmpfs overlay to map
-    # UID 0 to $USER.  This makes whoami, id, and $HOME all consistent.
+    """Build shell entry command: fix user identity, cd to project dir, start bash."""
     setup_script = (
+        # Fix user identity when running as root inside container
         'if [ "$(id -u)" = "0" ] && [ -n "$USER" ] && [ "$USER" != "root" ]; then '
         '  sed -i "s|^root:[^:]*:0:0:[^:]*:[^:]*:|$USER:x:0:0:$USER:/home/$USER:|" /etc/passwd 2>/dev/null; '
+        "fi; "
+        # cd to project dir (SCITEX_PROJECT is set by build_exec_args)
+        'if [ -n "$SCITEX_PROJECT" ] && [ -n "$USER" ]; then '
+        '  _proj="/home/$USER/proj/$SCITEX_PROJECT"; '
+        '  if [ -d "$_proj" ]; then cd "$_proj"; '
+        '  else echo "⚠ Project directory $_proj not found — project may have changed on SciTeX Cloud"; '
+        "  fi; "
         "fi; "
         "exec /bin/bash -l"
     )
