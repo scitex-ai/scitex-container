@@ -16,12 +16,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from scitex_container._compat import supports_return_as
+
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
 
+@supports_return_as
 def env_snapshot(
     containers_dir: str | Path | None = None,
     dev_repos: list[str | Path] | None = None,

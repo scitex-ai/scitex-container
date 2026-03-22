@@ -15,6 +15,8 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 logger = logging.getLogger(__name__)
 
 _SANDBOX_RE = re.compile(r"^sandbox-(\d{8}_\d{6})$")
@@ -35,6 +37,7 @@ def _versioned_sandboxes(containers_dir: Path) -> list[Path]:
     return sandboxes
 
 
+@supports_return_as
 def list_sandboxes(containers_dir: Path) -> list[dict]:
     """List all versioned sandbox directories with metadata.
 
@@ -72,6 +75,7 @@ def list_sandboxes(containers_dir: Path) -> list[dict]:
     return results
 
 
+@supports_return_as
 def get_active_sandbox(containers_dir: Path) -> str | None:
     """Read current-sandbox symlink to determine active sandbox version.
 
@@ -95,6 +99,7 @@ def get_active_sandbox(containers_dir: Path) -> str | None:
     return _parse_sandbox_version(target)
 
 
+@supports_return_as
 def switch_sandbox(
     version: str,
     containers_dir: Path,
@@ -148,6 +153,7 @@ def switch_sandbox(
     logger.info("Switched to sandbox %s", version)
 
 
+@supports_return_as
 def rollback_sandbox(
     containers_dir: Path,
     use_sudo: bool = False,
@@ -194,6 +200,7 @@ def rollback_sandbox(
     return previous
 
 
+@supports_return_as
 def cleanup_sandboxes(
     containers_dir: Path,
     keep: int = 5,
@@ -239,6 +246,7 @@ def cleanup_sandboxes(
     return removed
 
 
+@supports_return_as
 def cleanup_sifs(
     containers_dir: Path,
     keep: int = 0,

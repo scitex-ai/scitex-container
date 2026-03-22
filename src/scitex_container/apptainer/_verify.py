@@ -10,6 +10,8 @@ import logging
 import subprocess
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 from ._utils import detect_container_cmd
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,7 @@ def _hash_file(path: Path, chunk_size: int = 8192) -> str:
     return h.hexdigest()
 
 
+@supports_return_as
 def verify(
     sif_path: str | Path,
     def_path: str | Path | None = None,

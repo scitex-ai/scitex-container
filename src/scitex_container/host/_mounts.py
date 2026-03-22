@@ -8,6 +8,8 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -62,6 +64,7 @@ def _resolve_binary(name: str, prefix: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 
+@supports_return_as
 def get_texlive_binds(prefix: str = "/usr") -> list[dict]:
     """Generate bind mount entries for TeXLive.
 
@@ -113,6 +116,7 @@ def get_texlive_binds(prefix: str = "/usr") -> list[dict]:
     return mounts
 
 
+@supports_return_as
 def get_mount_config(
     texlive_prefix: str = "",
     host_mounts_raw: str = "",

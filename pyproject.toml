@@ -4,38 +4,67 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scitex-container"
-version = "0.1.3"
+version = "0.1.4"
 description = "Unified container management for Apptainer and Docker"
 readme = "README.md"
-license = "AGPL-3.0"
+license = "AGPL-3.0-only"
 requires-python = ">=3.10"
 authors = [
     { name = "Yusuke Watanabe", email = "ywatanabe@scitex.ai" },
 ]
-keywords = ["apptainer", "singularity", "docker", "container", "sandbox", "mcp"]
+keywords = ["scitex", "apptainer", "singularity", "docker", "container", "sandbox", "mcp"]
 
 dependencies = [
     "click",
     "packaging",
+    "scitex-dev>=0.2.0",
 ]
 
 [project.optional-dependencies]
 mcp = ["fastmcp>=2.0.0"]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=2.0",
+    "sphinx-copybutton>=0.5",
+    "sphinx-autodoc-typehints>=1.25",
+]
 dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
-all = ["fastmcp>=2.0.0", "pytest>=7.0.0", "pytest-cov>=4.0.0"]
+all = ["scitex-container[mcp,docs,dev]"]
 
 [project.scripts]
 scitex-container = "scitex_container._cli:main"
 scitex-container-mcp = "scitex_container.mcp_server:main"
 
+[project.entry-points."scitex_dev.docs"]
+scitex-container = "scitex_container"
+
+[project.entry-points."scitex_dev.skills"]
+scitex-container = "scitex_container"
+
 [project.urls]
 Homepage = "https://github.com/ywatanabe1989/scitex-container"
+Documentation = "https://scitex-container.readthedocs.io"
 Repository = "https://github.com/ywatanabe1989/scitex-container.git"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/scitex_container"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/scitex_container/skills" = "scitex_container/skills"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["scitex_container"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "if TYPE_CHECKING:",
+]

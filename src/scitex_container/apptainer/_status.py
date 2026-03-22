@@ -10,11 +10,14 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 from ._utils import find_containers_dir
 
 logger = logging.getLogger(__name__)
 
 
+@supports_return_as
 def status(containers_dir: str | Path | None = None) -> list[dict]:
     """List available containers and their status.
 

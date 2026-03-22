@@ -8,7 +8,10 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
 
+
+@supports_return_as
 def detect_container_cmd() -> str:
     """Detect apptainer or singularity command.
 
@@ -31,6 +34,7 @@ def detect_container_cmd() -> str:
     )
 
 
+@supports_return_as
 def find_containers_dir() -> Path:
     """Find the containers directory.
 

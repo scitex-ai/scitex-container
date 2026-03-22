@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
 
+
+@supports_return_as
 def get_dev_mounts(repos: list[dict]) -> list[str]:
     """Generate Docker volume mount strings for development repositories.
 

@@ -9,11 +9,14 @@ import logging
 import subprocess
 from pathlib import Path
 
+from scitex_container._compat import supports_return_as
+
 from ._utils import detect_container_cmd
 
 logger = logging.getLogger(__name__)
 
 
+@supports_return_as
 def freeze(
     sif_path: str | Path,
     output_dir: str | Path | None = None,
