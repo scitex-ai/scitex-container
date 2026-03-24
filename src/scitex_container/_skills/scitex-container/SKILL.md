@@ -1,18 +1,17 @@
 ---
 name: scitex-container
-description: Unified container management for Apptainer and Docker - build, run, push, sandbox management, and SLURM integration for reproducible research. Use when working with containers for HPC or reproducible environments.
-allowed-tools: mcp__scitex__container_*
+description: Unified container management for Apptainer/Singularity and Docker — build SIFs, manage sandboxes, version/rollback, SLURM integration, freeze lock files, verify integrity, environment snapshots. Use when working with containers for HPC or reproducible environments.
+allowed-tools: mcp__scitex__container_*, mcp__scitex__sandbox_*, mcp__scitex__docker_*, mcp__scitex__host_*
 ---
 
-# Container Management with scitex-container
+# scitex-container Skills Index
 
-Unified container management for Apptainer and Docker with SLURM integration.
-Build, run, push containers; manage sandbox versions; freeze/verify metadata.
+Unified container management for Apptainer/Singularity and Docker.
 
-Supported runtimes: Apptainer/Singularity (ORAS) and Docker (Docker Hub).
+Sub-skills:
 
-- For quick start examples, see [quick-start.md](quick-start.md)
-- For Python API reference, see [python-api.md](python-api.md)
-- For CLI commands, see [cli-reference.md](cli-reference.md)
-- For MCP tools (AI agents), see [mcp-tools.md](mcp-tools.md)
-- For environment variables, see [environment.md](environment.md)
+- [quick-start.md](quick-start.md) — Install and first-use examples
+- [python-api.md](python-api.md) — Full Python API with signatures
+- [cli-reference.md](cli-reference.md) — CLI commands reference
+- [mcp-tools.md](mcp-tools.md) — MCP tools for AI agents
+- [environment.md](environment.md) — Environment variables

@@ -58,9 +58,6 @@ scitex-container sandbox maintain --sandbox-dir ./sandbox-20260225_173700 pip in
 
 # Update ecosystem packages inside sandbox (fast, no full rebuild)
 scitex-container sandbox update --sandbox-dir ./sandbox-20260225_173700
-
-# Convert sandbox back to SIF
-# (use: apptainer build --force output.sif sandbox-dir/ or via Python API)
 ```
 
 ## Python Quick Start
