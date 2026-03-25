@@ -1,5 +1,4 @@
 ---
-name: scitex-container
 description: Unified container management for Apptainer/Singularity and Docker — build SIFs, manage sandboxes, version/rollback, SLURM integration, freeze lock files, verify integrity, environment snapshots. Use when working with containers for HPC or reproducible environments.
 allowed-tools: mcp__scitex__container_*, mcp__scitex__sandbox_*, mcp__scitex__docker_*, mcp__scitex__host_*
 ---
