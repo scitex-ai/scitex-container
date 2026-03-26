@@ -27,7 +27,7 @@ Research computing environments depend on containers (Apptainer/Singularity for 
 
 ## Solution
 
-`scitex-container` provides a single Python package with three interfaces — Python API, Command-Line Interface (CLI), and Model Context Protocol (MCP) server — to manage Apptainer and Docker containers uniformly. It handles building, versioning, sandboxing, host-package verification, and environment snapshots for reproducibility, all through one consistent interface.
+`scitex-container` provides a single Python package with four interfaces — Python API, Command-Line Interface (CLI), Model Context Protocol (MCP) server, and Skills — to manage Apptainer and Docker containers uniformly. It handles building, versioning, sandboxing, host-package verification, and environment snapshots for reproducibility, all through one consistent interface.
 
 ## Installation
 
@@ -67,9 +67,12 @@ scitex-container rollback
 scitex-container --help-recursive
 ```
 
-## Three Interfaces
+## Four Interfaces
 
-### Python API
+<details>
+<summary><strong>Python API</strong></summary>
+
+<br>
 
 ```python
 import scitex_container
@@ -117,7 +120,12 @@ args = scitex_container.apptainer.build_exec_args(
 
 </details>
 
-### CLI Commands
+</details>
+
+<details>
+<summary><strong>CLI Commands</strong></summary>
+
+<br>
 
 ```bash
 scitex-container status                 # Unified dashboard
@@ -166,7 +174,12 @@ scitex-container docker restart        # Restart services
 
 </details>
 
-### MCP Server
+</details>
+
+<details>
+<summary><strong>MCP Server</strong></summary>
+
+<br>
 
 scitex-container exposes an MCP server so AI agents (Claude, etc.) can manage containers autonomously.
 
@@ -191,6 +204,31 @@ scitex-container mcp list-tools -vv
 | `host_install` | Install host-side packages |
 | `env_snapshot` | Capture reproducibility snapshot |
 | `verify` | Verify SIF integrity against lock files |
+
+</details>
+
+<details>
+<summary><strong>Skills — for AI Agent Discovery</strong></summary>
+
+<br>
+
+Skills provide workflow-oriented guides that AI agents query to discover capabilities and usage patterns.
+
+```bash
+scitex-container skills list              # List available skill pages
+scitex-container skills get SKILL         # Show main skill page
+scitex-dev skills export --package scitex-container  # Export to Claude Code
+```
+
+| Skill | Content |
+|-------|---------|
+| `quick-start` | Install and first-use examples |
+| `python-api` | Full Python API with signatures |
+| `cli-reference` | CLI commands reference |
+| `mcp-tools` | MCP tools for AI agents |
+| `environment` | Environment variables |
+
+</details>
 
 ## Part of SciTeX
 
