@@ -6,5 +6,5 @@
 from . import apptainer, docker, host
 from ._snapshot import env_snapshot
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __all__ = ["apptainer", "docker", "host", "env_snapshot"]
