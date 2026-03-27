@@ -5,6 +5,14 @@ allowed-tools: mcp__scitex__container_*, mcp__scitex__sandbox_*, mcp__scitex__do
 
 # scitex-container Skills Index
 
+## Installation
+
+```bash
+pip install scitex-container
+# Development:
+pip install -e /home/ywatanabe/proj/scitex-container
+```
+
 Unified container management for Apptainer/Singularity and Docker.
 
 Sub-skills:
