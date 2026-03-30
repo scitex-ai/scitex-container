@@ -403,6 +403,12 @@ def _build_shell_command(username: str) -> list[str]:
         'if [ "$(id -u)" = "0" ] && [ -n "$USER" ] && [ "$USER" != "root" ]; then '
         '  sed -i "s|^root:[^:]*:0:0:[^:]*:[^:]*:|$USER:x:0:0:$USER:/home/$USER:|" /etc/passwd 2>/dev/null; '
         "fi; "
+        # Ensure HOME points to the user's home directory.
+        # apptainer exec instance:// inherits env from the calling process,
+        # which may have HOME set to the broker/Django process's home dir
+        # rather than the container user's home. Without this, bash -l
+        # looks for .bash_profile in the wrong directory and PS1 is never set.
+        'if [ -n "$USER" ]; then export HOME="/home/$USER"; fi; '
         # cd to project dir (SCITEX_PROJECT is set by build_exec_args)
         'if [ -n "$SCITEX_PROJECT" ] && [ -n "$USER" ]; then '
         '  _proj="/home/$USER/proj/$SCITEX_PROJECT"; '
