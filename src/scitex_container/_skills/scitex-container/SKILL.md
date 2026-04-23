@@ -5,20 +5,24 @@ allowed-tools: mcp__scitex__container_*, mcp__scitex__sandbox_*, mcp__scitex__do
 
 # scitex-container Skills Index
 
-## Installation
+## Installation & import (two equivalent paths)
 
-```bash
-pip install scitex-container
-# Development:
-pip install -e /home/ywatanabe/proj/scitex-container
+The same module is reachable via two install paths. Both forms work at
+runtime; which one a user has depends on their install choice.
+
+```python
+# Standalone — pip install scitex-container
+import scitex_container
+scitex_container.build(...)
+
+# Umbrella — pip install scitex
+import scitex.container
+scitex.container.build(...)
 ```
 
-Unified container management for Apptainer/Singularity and Docker.
+`pip install scitex-container` alone does NOT expose the `scitex` namespace;
+`import scitex.container` raises `ModuleNotFoundError`. To use the
+`scitex.container` form, also `pip install scitex`.
 
-Sub-skills:
-
-- [quick-start.md](quick-start.md) — Install and first-use examples
-- [python-api.md](python-api.md) — Full Python API with signatures
-- [cli-reference.md](cli-reference.md) — CLI commands reference
-- [mcp-tools.md](mcp-tools.md) — MCP tools for AI agents
-- [environment.md](environment.md) — Environment variables
+See [../../general/02_interface-python-api.md] for the ecosystem-wide
+rule and empirical verification table.
