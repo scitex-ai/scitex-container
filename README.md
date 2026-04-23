@@ -21,6 +21,15 @@
 
 ---
 
+## Problem and Solution
+
+
+| # | Problem | Solution |
+|---|---------|----------|
+| 1 | **"Reproducible" containers drift** -- `Dockerfile` builds a different image each time because `apt-get install python3` floats | **Versioned SIF** -- `scitex-container build` pins the image content hash; `switch-version 2.19.5` is an atomic symlink flip |
+| 2 | **Rollback requires docker tags + manual surgery** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
+| 3 | **Paper "env" is `pip freeze`** -- useless without the python version, OS libs, CUDA driver | **`env_snapshot()`** -- full reproducibility capsule: container tag + pip freeze + conda env + apt packages + git commits, serialized as a single file for manuscript attachments |
+
 ## Problem
 
 Research computing environments depend on containers (Apptainer/Singularity for High-Performance Computing (HPC), Docker for cloud services), yet managing them involves disparate tools, manual version tracking, and no simple way to verify reproducibility. Switching between container runtimes, managing sandbox development, and keeping host-side dependencies aligned with container expectations are recurring pain points.
