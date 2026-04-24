@@ -21,13 +21,22 @@
 
 ---
 
+## Problem and Solution
+
+
+| # | Problem | Solution |
+|---|---------|----------|
+| 1 | **"Reproducible" containers drift** -- `Dockerfile` builds a different image each time because `apt-get install python3` floats | **Versioned SIF** -- `scitex-container build` pins the image content hash; `switch-version 2.19.5` is an atomic symlink flip |
+| 2 | **Rollback requires docker tags + manual surgery** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
+| 3 | **Paper "env" is `pip freeze`** -- useless without the python version, OS libs, CUDA driver | **`env_snapshot()`** -- full reproducibility capsule: container tag + pip freeze + conda env + apt packages + git commits, serialized as a single file for manuscript attachments |
+
 ## Problem
 
 Research computing environments depend on containers (Apptainer/Singularity for High-Performance Computing (HPC), Docker for cloud services), yet managing them involves disparate tools, manual version tracking, and no simple way to verify reproducibility. Switching between container runtimes, managing sandbox development, and keeping host-side dependencies aligned with container expectations are recurring pain points.
 
 ## Solution
 
-`scitex-container` provides a single Python package with three interfaces — Python API, Command-Line Interface (CLI), and Model Context Protocol (MCP) server — to manage Apptainer and Docker containers uniformly. It handles building, versioning, sandboxing, host-package verification, and environment snapshots for reproducibility, all through one consistent interface.
+`scitex-container` provides a single Python package with four interfaces — Python API, Command-Line Interface (CLI), Model Context Protocol (MCP) server, and Skills — to manage Apptainer and Docker containers uniformly. It handles building, versioning, sandboxing, host-package verification, and environment snapshots for reproducibility, all through one consistent interface.
 
 ## Installation
 
@@ -67,9 +76,12 @@ scitex-container rollback
 scitex-container --help-recursive
 ```
 
-## Three Interfaces
+## Four Interfaces
 
-### Python API
+<details>
+<summary><strong>Python API</strong></summary>
+
+<br>
 
 ```python
 import scitex_container
@@ -117,7 +129,12 @@ args = scitex_container.apptainer.build_exec_args(
 
 </details>
 
-### CLI Commands
+</details>
+
+<details>
+<summary><strong>CLI Commands</strong></summary>
+
+<br>
 
 ```bash
 scitex-container status                 # Unified dashboard
@@ -166,7 +183,12 @@ scitex-container docker restart        # Restart services
 
 </details>
 
-### MCP Server
+</details>
+
+<details>
+<summary><strong>MCP Server</strong></summary>
+
+<br>
 
 scitex-container exposes an MCP server so AI agents (Claude, etc.) can manage containers autonomously.
 
@@ -191,6 +213,31 @@ scitex-container mcp list-tools -vv
 | `host_install` | Install host-side packages |
 | `env_snapshot` | Capture reproducibility snapshot |
 | `verify` | Verify SIF integrity against lock files |
+
+</details>
+
+<details>
+<summary><strong>Skills — for AI Agent Discovery</strong></summary>
+
+<br>
+
+Skills provide workflow-oriented guides that AI agents query to discover capabilities and usage patterns.
+
+```bash
+scitex-container skills list              # List available skill pages
+scitex-container skills get SKILL         # Show main skill page
+scitex-dev skills export --package scitex-container  # Export to Claude Code
+```
+
+| Skill | Content |
+|-------|---------|
+| `quick-start` | Install and first-use examples |
+| `python-api` | Full Python API with signatures |
+| `cli-reference` | CLI commands reference |
+| `mcp-tools` | MCP tools for AI agents |
+| `environment` | Environment variables |
+
+</details>
 
 ## Part of SciTeX
 
