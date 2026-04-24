@@ -76,7 +76,24 @@ def host_check():
             )
 
 
-@host.command(name="mounts")
+@host.command(
+    name="mounts",
+    hidden=True,
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.pass_context
+def host_mounts_deprecated(ctx):
+    """(deprecated) Renamed to `show-mounts`."""
+    click.echo(
+        "error: `scitex-container host mounts` was renamed to "
+        "`scitex-container host show-mounts`.\n"
+        "Re-run with: scitex-container host show-mounts [...]",
+        err=True,
+    )
+    ctx.exit(2)
+
+
+@host.command(name="show-mounts")
 @click.option(
     "--texlive-prefix",
     default="/usr",

@@ -8,7 +8,7 @@ from __future__ import annotations
 import click
 
 
-@click.command()
+@click.command("show-status")
 def status():
     """Show unified status dashboard (Apptainer + host packages + Docker)."""
     _show_apptainer_status()

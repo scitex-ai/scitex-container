@@ -63,15 +63,54 @@ def main(ctx, help_recursive):
         ctx.exit(0)
 
 
-# Apptainer commands (top-level)
-main.add_command(build)
-main.add_command(freeze)
-main.add_command(list_containers)
-main.add_command(switch)
-main.add_command(rollback)
-main.add_command(deploy)
-main.add_command(cleanup)
-main.add_command(verify)
+# Apptainer commands — nested under `apptainer` group per §1 tree form
+@main.group("apptainer")
+def apptainer_group():
+    """Apptainer (SIF) container operations."""
+
+
+apptainer_group.add_command(build)
+apptainer_group.add_command(freeze)
+apptainer_group.add_command(list_containers)
+apptainer_group.add_command(switch)
+apptainer_group.add_command(rollback)
+apptainer_group.add_command(deploy)
+apptainer_group.add_command(cleanup)
+apptainer_group.add_command(verify)
+
+
+def _deprecated_top_level(old: str, verb_path: str):
+    """old at top level → `apptainer <verb_path>`."""
+
+    @click.pass_context
+    def _impl(ctx, **_):
+        click.echo(
+            f"error: `scitex-container {old}` was renamed to "
+            f"`scitex-container {verb_path}`.\n"
+            f"Re-run with: scitex-container {verb_path} <args>",
+            err=True,
+        )
+        ctx.exit(2)
+
+    return click.command(
+        old,
+        hidden=True,
+        context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+    )(_impl)
+
+
+for _old, _path in [
+    ("build", "apptainer build"),
+    ("freeze", "apptainer freeze"),
+    ("list", "apptainer list"),
+    ("switch", "apptainer switch"),
+    ("rollback", "apptainer rollback"),
+    ("deploy", "apptainer deploy"),
+    ("cleanup", "apptainer cleanup"),
+    ("verify", "apptainer verify"),
+]:
+    main.add_command(_deprecated_top_level(_old, _path))
+
 
 # Sub-groups
 main.add_command(sandbox)
@@ -79,11 +118,15 @@ main.add_command(docker)
 main.add_command(host)
 main.add_command(mcp)
 
-# Unified status dashboard
+# Unified status dashboard (show-status)
 main.add_command(status)
 
-# Clew reproducibility snapshot
+# Clew reproducibility snapshot (save-env-snapshot)
 main.add_command(env_snapshot_cmd)
+
+# Hidden deprecation redirects for legacy top-level names
+main.add_command(_deprecated_top_level("status", "show-status"))
+main.add_command(_deprecated_top_level("env-snapshot", "save-env-snapshot"))
 
 
 @main.command("list-python-apis")

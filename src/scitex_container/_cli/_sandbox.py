@@ -153,7 +153,24 @@ def sandbox_rollback(containers_dir, use_sudo):
     click.secho(f"Rolled back sandbox {old} -> {new_ver}", fg="green")
 
 
-@sandbox.command(name="cleanup")
+@sandbox.command(
+    name="cleanup",
+    hidden=True,
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.pass_context
+def sandbox_cleanup_deprecated(ctx):
+    """(deprecated) Renamed to `clean`."""
+    click.echo(
+        "error: `scitex-container sandbox cleanup` was renamed to "
+        "`scitex-container sandbox clean`.\n"
+        "Re-run with: scitex-container sandbox clean [...]",
+        err=True,
+    )
+    ctx.exit(2)
+
+
+@sandbox.command(name="clean")
 @click.option(
     "--keep",
     "-k",

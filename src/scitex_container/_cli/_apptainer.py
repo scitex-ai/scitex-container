@@ -238,7 +238,7 @@ def deploy(target_dir, containers_dir):
     click.secho(f"Deployed to {target_dir}", fg="green")
 
 
-@click.command()
+@click.command("clean")
 @click.option(
     "--keep",
     "-k",

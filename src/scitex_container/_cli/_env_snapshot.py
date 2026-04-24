@@ -10,7 +10,7 @@ import json
 import click
 
 
-@click.command("env-snapshot")
+@click.command("save-env-snapshot")
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
 @click.option(
     "--dev-repo",
