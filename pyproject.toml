@@ -62,6 +62,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 
+[tool.scitex-linter]
+library_dirs = ["src", "tests", "examples"]
+
 [tool.coverage.run]
 source = ["scitex_container"]
 
