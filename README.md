@@ -1,5 +1,16 @@
 # SciTeX Container
 
+<!-- scitex-badges:start -->
+[![PyPI](https://img.shields.io/pypi/v/scitex-container.svg)](https://pypi.org/project/scitex-container/)
+[![Python](https://img.shields.io/pypi/pyversions/scitex-container.svg)](https://pypi.org/project/scitex-container/)
+[![Tests](https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml)
+[![Install Test](https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml)
+[![Coverage](https://codecov.io/gh/ywatanabe1989/scitex-container/graph/badge.svg)](https://codecov.io/gh/ywatanabe1989/scitex-container)
+[![Docs](https://readthedocs.org/projects/scitex-container/badge/?version=latest)](https://scitex-container.readthedocs.io/en/latest/)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+<!-- scitex-badges:end -->
+
+
 <p align="center">
   <a href="https://scitex.ai">
     <img src="docs/scitex-logo-blue-cropped.png" alt="SciTeX" width="400">
@@ -20,6 +31,8 @@
 </p>
 
 ---
+
+> **Interfaces:** Python ⭐⭐ · CLI ⭐⭐⭐ (primary) · MCP ⭐⭐ · Skills ⭐⭐ · Hook — · HTTP —
 
 ## Problem and Solution
 
