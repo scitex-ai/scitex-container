@@ -21,7 +21,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mcp = ["fastmcp>=2.0.0"]
+mcp = [
+    "fastmcp>=2.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
 docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",
@@ -29,8 +35,9 @@ docs = [
     "sphinx-copybutton>=0.5",
     "sphinx-autodoc-typehints>=1.25",
 ]
-dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
-all = ["scitex-container[mcp,docs,dev]"]
+all = [
+    "scitex-container[mcp]",
+]
 
 [project.scripts]
 scitex-container = "scitex_container._cli:main"
