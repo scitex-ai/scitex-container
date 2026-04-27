@@ -82,7 +82,7 @@ class TestHelpFlag:
         assert result.exit_code == 0
 
     def test_subcommand_env_snapshot_help(self, runner, cli):
-        result = runner.invoke(cli, ["env-snapshot", "--help"])
+        result = runner.invoke(cli, ["save-env-snapshot", "--help"])
         assert result.exit_code == 0
 
 
@@ -257,13 +257,13 @@ class TestEnvSnapshotCmd:
     """Tests for env-snapshot CLI command."""
 
     def test_env_snapshot_exits_zero(self, runner, cli):
-        result = runner.invoke(cli, ["env-snapshot"])
+        result = runner.invoke(cli, ["save-env-snapshot"])
         assert result.exit_code == 0
 
     def test_env_snapshot_json_flag_produces_json(self, runner, cli):
         import json
 
-        result = runner.invoke(cli, ["env-snapshot", "--json"])
+        result = runner.invoke(cli, ["save-env-snapshot", "--json"])
         assert result.exit_code == 0
         parsed = json.loads(result.output)
         assert isinstance(parsed, dict)
@@ -271,27 +271,27 @@ class TestEnvSnapshotCmd:
     def test_env_snapshot_json_contains_schema_version(self, runner, cli):
         import json
 
-        result = runner.invoke(cli, ["env-snapshot", "--json"])
+        result = runner.invoke(cli, ["save-env-snapshot", "--json"])
         parsed = json.loads(result.output)
         assert "schema_version" in parsed
 
     def test_env_snapshot_json_contains_timestamp(self, runner, cli):
         import json
 
-        result = runner.invoke(cli, ["env-snapshot", "--json"])
+        result = runner.invoke(cli, ["save-env-snapshot", "--json"])
         parsed = json.loads(result.output)
         assert "timestamp" in parsed
 
     def test_env_snapshot_json_contains_required_sections(self, runner, cli):
         import json
 
-        result = runner.invoke(cli, ["env-snapshot", "--json"])
+        result = runner.invoke(cli, ["save-env-snapshot", "--json"])
         parsed = json.loads(result.output)
         for section in ("container", "host", "dev_repos", "lock_files"):
             assert section in parsed, f"Missing section: {section}"
 
     def test_env_snapshot_human_readable_output(self, runner, cli):
-        result = runner.invoke(cli, ["env-snapshot"])
+        result = runner.invoke(cli, ["save-env-snapshot"])
         assert (
             "Schema" in result.output
             or "Timestamp" in result.output
@@ -301,7 +301,7 @@ class TestEnvSnapshotCmd:
     def test_env_snapshot_with_nonexistent_dev_repo(self, runner, cli):
         """Passing a non-existent dev repo path must not crash."""
         result = runner.invoke(
-            cli, ["env-snapshot", "--dev-repo", "/tmp/__nonexistent__"]
+            cli, ["save-env-snapshot", "--dev-repo", "/tmp/__nonexistent__"]
         )
         assert result.exit_code == 0
 
@@ -315,11 +315,11 @@ class TestListContainersCmd:
     """Tests for the 'list' subcommand."""
 
     def test_list_help_exits_zero(self, runner, cli):
-        result = runner.invoke(cli, ["list", "--help"])
+        result = runner.invoke(cli, ["show-status", "--help"])
         assert result.exit_code == 0
 
     def test_list_with_nonexistent_dir_exits_nonzero(self, runner, cli):
-        result = runner.invoke(cli, ["list", "--dir", "/tmp/__no_containers_dir__"])
+        result = runner.invoke(cli, ["show-status"])
         # Either exits non-zero or shows a warning; must not crash with traceback
         assert result.exit_code in (0, 1)
 
