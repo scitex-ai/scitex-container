@@ -183,10 +183,10 @@ class TestFindContainersDir:
                 utils.find_containers_dir()
 
     def test_user_home_containers_fallback(self, tmp_path, monkeypatch):
-        """~/.scitex/containers/ with .def files is a valid fallback."""
+        """~/.scitex/container/runtime/containers/ with .def files is a valid fallback."""
         # Use a temp dir as home to avoid touching the real ~/.scitex
         fake_home = tmp_path / "fakehome"
-        user_containers = fake_home / ".scitex" / "containers"
+        user_containers = fake_home / ".scitex" / "container" / "runtime" / "containers"
         user_containers.mkdir(parents=True)
         (user_containers / "myenv.def").write_text("Bootstrap: docker\n")
 
