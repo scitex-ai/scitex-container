@@ -6,5 +6,13 @@
 from . import apptainer, docker, host
 from ._snapshot import env_snapshot
 
-__version__ = "0.1.8"
+try:
+    from importlib.metadata import version as _v, PackageNotFoundError
+    try:
+        __version__ = _v("scitex-container")
+    except PackageNotFoundError:
+        __version__ = "0.0.0+local"
+    del _v, PackageNotFoundError
+except ImportError:  # pragma: no cover — only on ancient Pythons
+    __version__ = "0.0.0+local"
 __all__ = ["apptainer", "docker", "host", "env_snapshot"]
