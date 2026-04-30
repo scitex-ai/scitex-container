@@ -1,6 +1,8 @@
 ---
 skill: scitex-container/python-api
 description: Full Python API reference for scitex-container with signatures
+name: python-api
+tags: [scitex-container, scitex-package]
 ---
 
 # Python API Reference
