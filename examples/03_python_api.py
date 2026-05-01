@@ -1,188 +1,149 @@
 #!/usr/bin/env python3
-# Timestamp: "2026-03-14"
-# File: examples/03_python_api.py
-# Author: ywatanabe
 """Demonstrate scitex_container Python API usage.
 
-Shows version, module structure, and available functions.
-Actual container operations (build, sandbox, etc.) require Apptainer or Docker
-to be installed on the host; those sections use try/except so this script
-runs cleanly in environments without container tools.
+Shows version, module structure, and available functions. Actual container
+operations (build, sandbox, etc.) require Apptainer or Docker to be installed
+on the host; those sections use try/except so this script runs cleanly in
+environments without container tools.
 
-Output artifacts are written to examples/03_python_api_out/.
+Output artifacts are written to ``examples/03_python_api_out/``.
+
+Usage:
+    python 03_python_api.py
 """
 
 import inspect
 import json
+import logging
 import shutil
 from pathlib import Path
 
 import scitex_container
 
-# ---------------------------------------------------------------------------
-# Output directory
-# ---------------------------------------------------------------------------
+logger = logging.getLogger(__name__)
 
-OUT_DIR = Path(__file__).parent / "03_python_api_out"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# Version and top-level structure
-# ---------------------------------------------------------------------------
+def _describe(report, mod):
+    for name in sorted(mod.__all__):
+        obj = getattr(mod, name, None)
+        if obj is None:
+            continue
+        if callable(obj) and not isinstance(obj, type):
+            try:
+                sig_str = str(inspect.signature(obj))
+            except (ValueError, TypeError):
+                sig_str = "()"
+            doc = inspect.getdoc(obj) or ""
+            first_line = doc.split("\n")[0].strip() if doc else ""
+            logger.info("  %s%s", name, sig_str)
+            if first_line:
+                logger.info("    %s", first_line)
+            report[name] = {"signature": sig_str, "doc": first_line}
+        elif isinstance(obj, type):
+            logger.info("  %s  [class]", name)
+            report[name] = {"kind": "class"}
+        else:
+            logger.info("  %s = %r", name, obj)
+            report[name] = {"value": repr(obj)}
 
-print("=" * 60)
-print("scitex_container Python API demo")
-print("=" * 60)
-print()
-print(f"Version : {scitex_container.__version__}")
-print(f"Package : {scitex_container.__file__}")
-print()
 
-# ---------------------------------------------------------------------------
-# List modules exposed by the top-level package
-# ---------------------------------------------------------------------------
+def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-print("Top-level public names:")
-for name in scitex_container.__all__:
-    obj = getattr(scitex_container, name)
-    if inspect.ismodule(obj):
-        print(f"  {name}  [module]")
-    elif callable(obj):
-        try:
-            sig = inspect.signature(obj)
-        except (ValueError, TypeError):
-            sig = "()"
-        print(f"  {name}{sig}")
-    else:
-        print(f"  {name} = {obj!r}")
-print()
+    out_dir = Path(__file__).parent / "03_python_api_out"
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# Enumerate the apptainer sub-module
-# ---------------------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # Version and top-level structure
+    # -----------------------------------------------------------------------
+    logger.info("=" * 60)
+    logger.info("scitex_container Python API demo")
+    logger.info("=" * 60)
+    logger.info("")
+    logger.info("Version : %s", scitex_container.__version__)
+    logger.info("Package : %s", scitex_container.__file__)
+    logger.info("")
 
-print("-" * 60)
-print("scitex_container.apptainer — functions and constants:")
-print("-" * 60)
+    # -----------------------------------------------------------------------
+    # List modules exposed by the top-level package
+    # -----------------------------------------------------------------------
+    logger.info("Top-level public names:")
+    for name in scitex_container.__all__:
+        obj = getattr(scitex_container, name)
+        if inspect.ismodule(obj):
+            logger.info("  %s  [module]", name)
+        elif callable(obj):
+            try:
+                sig = inspect.signature(obj)
+            except (ValueError, TypeError):
+                sig = "()"
+            logger.info("  %s%s", name, sig)
+        else:
+            logger.info("  %s = %r", name, obj)
+    logger.info("")
 
-apptainer_report = {}
-for name in sorted(scitex_container.apptainer.__all__):
-    obj = getattr(scitex_container.apptainer, name, None)
-    if obj is None:
-        continue
-    if callable(obj) and not isinstance(obj, type):
-        try:
-            sig_str = str(inspect.signature(obj))
-        except (ValueError, TypeError):
-            sig_str = "()"
-        doc = inspect.getdoc(obj) or ""
-        first_line = doc.split("\n")[0].strip() if doc else ""
-        print(f"  {name}{sig_str}")
-        if first_line:
-            print(f"    {first_line}")
-        apptainer_report[name] = {"signature": sig_str, "doc": first_line}
-    elif isinstance(obj, type):
-        print(f"  {name}  [class]")
-        apptainer_report[name] = {"kind": "class"}
-    else:
-        print(f"  {name} = {obj!r}")
-        apptainer_report[name] = {"value": repr(obj)}
-print()
+    # -----------------------------------------------------------------------
+    # Enumerate the apptainer sub-module
+    # -----------------------------------------------------------------------
+    logger.info("-" * 60)
+    logger.info("scitex_container.apptainer - functions and constants:")
+    logger.info("-" * 60)
+    apptainer_report: dict = {}
+    _describe(apptainer_report, scitex_container.apptainer)
+    logger.info("")
 
-# ---------------------------------------------------------------------------
-# Enumerate the docker sub-module
-# ---------------------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # Enumerate the docker sub-module
+    # -----------------------------------------------------------------------
+    logger.info("-" * 60)
+    logger.info("scitex_container.docker - functions:")
+    logger.info("-" * 60)
+    docker_report: dict = {}
+    _describe(docker_report, scitex_container.docker)
+    logger.info("")
 
-print("-" * 60)
-print("scitex_container.docker — functions:")
-print("-" * 60)
+    # -----------------------------------------------------------------------
+    # Enumerate the host sub-module
+    # -----------------------------------------------------------------------
+    logger.info("-" * 60)
+    logger.info("scitex_container.host - functions and constants:")
+    logger.info("-" * 60)
+    host_report: dict = {}
+    _describe(host_report, scitex_container.host)
+    logger.info("")
 
-docker_report = {}
-for name in sorted(scitex_container.docker.__all__):
-    obj = getattr(scitex_container.docker, name, None)
-    if obj is None:
-        continue
-    if callable(obj) and not isinstance(obj, type):
-        try:
-            sig_str = str(inspect.signature(obj))
-        except (ValueError, TypeError):
-            sig_str = "()"
-        doc = inspect.getdoc(obj) or ""
-        first_line = doc.split("\n")[0].strip() if doc else ""
-        print(f"  {name}{sig_str}")
-        if first_line:
-            print(f"    {first_line}")
-        docker_report[name] = {"signature": sig_str, "doc": first_line}
-    else:
-        print(f"  {name}  [other]")
-        docker_report[name] = {"kind": "other"}
-print()
+    # -----------------------------------------------------------------------
+    # Optional: probe for Apptainer availability (no container op, just detection)
+    # -----------------------------------------------------------------------
+    logger.info("-" * 60)
+    logger.info("Container tool detection:")
+    logger.info("-" * 60)
+    try:
+        cmd = scitex_container.apptainer.detect_container_cmd()
+        logger.info("  Apptainer command detected: %r", cmd)
+    except Exception as exc:
+        logger.info("  Apptainer not detected: %s", exc)
 
-# ---------------------------------------------------------------------------
-# Enumerate the host sub-module
-# ---------------------------------------------------------------------------
+    # Docker: check via shutil.which since there is no dedicated detector
+    docker_bin = shutil.which("docker")
+    logger.info("  Docker binary: %s", docker_bin or "not found")
+    logger.info("")
 
-print("-" * 60)
-print("scitex_container.host — functions and constants:")
-print("-" * 60)
+    # -----------------------------------------------------------------------
+    # Save API report as JSON artifact
+    # -----------------------------------------------------------------------
+    report = {
+        "version": scitex_container.__version__,
+        "apptainer": apptainer_report,
+        "docker": docker_report,
+        "host": host_report,
+    }
+    report_path = out_dir / "api_report.json"
+    report_path.write_text(json.dumps(report, indent=2))
+    logger.info("API report written to: %s", report_path)
 
-host_report = {}
-for name in sorted(scitex_container.host.__all__):
-    obj = getattr(scitex_container.host, name, None)
-    if obj is None:
-        continue
-    if callable(obj) and not isinstance(obj, type):
-        try:
-            sig_str = str(inspect.signature(obj))
-        except (ValueError, TypeError):
-            sig_str = "()"
-        doc = inspect.getdoc(obj) or ""
-        first_line = doc.split("\n")[0].strip() if doc else ""
-        print(f"  {name}{sig_str}")
-        if first_line:
-            print(f"    {first_line}")
-        host_report[name] = {"signature": sig_str, "doc": first_line}
-    elif isinstance(obj, type):
-        print(f"  {name}  [class]")
-        host_report[name] = {"kind": "class"}
-    else:
-        print(f"  {name} = {obj!r}")
-        host_report[name] = {"value": repr(obj)}
-print()
+    return 0
 
-# ---------------------------------------------------------------------------
-# Optional: probe for Apptainer availability (no container op, just detection)
-# ---------------------------------------------------------------------------
 
-print("-" * 60)
-print("Container tool detection:")
-print("-" * 60)
-
-try:
-    cmd = scitex_container.apptainer.detect_container_cmd()
-    print(f"  Apptainer command detected: {cmd!r}")
-except Exception as exc:
-    print(f"  Apptainer not detected: {exc}")
-
-# Docker: check via shutil.which since there is no dedicated detector
-
-docker_bin = shutil.which("docker")
-print(f"  Docker binary: {docker_bin or 'not found'}")
-print()
-
-# ---------------------------------------------------------------------------
-# Save API report as JSON artifact
-# ---------------------------------------------------------------------------
-
-report = {
-    "version": scitex_container.__version__,
-    "apptainer": apptainer_report,
-    "docker": docker_report,
-    "host": host_report,
-}
-
-report_path = OUT_DIR / "api_report.json"
-report_path.write_text(json.dumps(report, indent=2))
-print(f"API report written to: {report_path}")
-
-# EOF
+if __name__ == "__main__":
+    main()
