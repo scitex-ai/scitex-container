@@ -70,7 +70,7 @@ scitex-container --help-recursive
 
 ## Four Interfaces
 
-<details>
+<details open>
 <summary><strong>Python API</strong></summary>
 
 <br>
