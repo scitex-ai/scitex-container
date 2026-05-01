@@ -197,9 +197,10 @@ class TestMcpListTools:
 
     def test_mcp_list_tools_produces_output(self, runner, cli):
         result = runner.invoke(cli, ["mcp", "list-tools"])
-        # Either tools are listed, or an error message is shown — output must exist
-        combined = result.output + (result.stderr or "")
-        assert combined.strip() != ""
+        # Either tools are listed, or an error message is shown — output must exist.
+        # Click's default CliRunner mixes stderr into stdout, so result.output
+        # captures both streams.
+        assert result.output.strip() != ""
 
     def test_mcp_list_tools_help_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["mcp", "list-tools", "--help"])

@@ -6,25 +6,26 @@ current environment - container version, SIF hash, host package status,
 dev-repo git commits, and lock-file hashes. It degrades gracefully when
 container tools or git are absent.
 
-Output artifacts are written to ``examples/05_env_snapshot_out/``.
+Output artifacts are written to ``CONFIG.SDIR_RUN/`` (managed by stx.session).
 
 Usage:
     python 05_env_snapshot.py
 """
 
 import json
-import logging
 from pathlib import Path
 
+import scitex as stx
 import scitex_container
 
-logger = logging.getLogger(__name__)
 
-
-def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-    out_dir = Path(__file__).parent / "05_env_snapshot_out"
+@stx.session
+def main(
+    CONFIG=stx.session.INJECTED,
+    logger=stx.session.INJECTED,
+):
+    """Demonstrate the env_snapshot() reproducibility helper."""
+    out_dir = Path(CONFIG.SDIR_RUN)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # -----------------------------------------------------------------------
@@ -36,7 +37,7 @@ def main() -> int:
     logger.info("")
 
     snap = scitex_container.env_snapshot()
-    logger.info("%s", json.dumps(snap, indent=2))
+    logger.info(json.dumps(snap, indent=2))
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -54,11 +55,11 @@ def main() -> int:
         snap_with_repos = scitex_container.env_snapshot(
             dev_repos=[package_dir],
         )
-        logger.info("%s", json.dumps(snap_with_repos, indent=2))
+        logger.info(json.dumps(snap_with_repos, indent=2))
         logger.info("")
     except Exception as exc:
         # env_snapshot is designed never to raise, but guard just in case.
-        logger.info("env_snapshot raised unexpectedly: %s", exc)
+        logger.info(f"env_snapshot raised unexpectedly: {exc}")
         snap_with_repos = snap
 
     # -----------------------------------------------------------------------
@@ -69,14 +70,14 @@ def main() -> int:
     logger.info("=" * 60)
     logger.info("")
 
-    logger.info("  schema_version : %s", snap.get("schema_version", "N/A"))
-    logger.info("  timestamp      : %s", snap.get("timestamp", "N/A"))
+    logger.info(f"  schema_version : {snap.get('schema_version', 'N/A')}")
+    logger.info(f"  timestamp      : {snap.get('timestamp', 'N/A')}")
 
     container = snap.get("container", {})
     if container:
         logger.info("  container      :")
         for k, v in container.items():
-            logger.info("    %s: %s", k, v)
+            logger.info(f"    {k}: {v}")
     else:
         logger.info(
             "  container      : (not detected - Apptainer containers dir absent)"
@@ -90,7 +91,7 @@ def main() -> int:
             version = info.get("version", "")
             status = "installed" if installed else "missing"
             suffix = f" ({version})" if version else ""
-            logger.info("    %s: %s%s", pkg, status, suffix)
+            logger.info(f"    {pkg}: {status}{suffix}")
     else:
         logger.info("  host packages  : (none detected)")
 
@@ -103,7 +104,7 @@ def main() -> int:
             commit = commit_raw[:12] if commit_raw else "unknown"
             branch = repo.get("branch", "unknown")
             dirty_flag = " [dirty]" if repo.get("dirty", False) else ""
-            logger.info("    %s: %s@%s%s", name, branch, commit, dirty_flag)
+            logger.info(f"    {name}: {branch}@{commit}{dirty_flag}")
     else:
         logger.info("  dev_repos      : (none provided)")
 
@@ -111,7 +112,7 @@ def main() -> int:
     if lock_files:
         logger.info("  lock_files     :")
         for lock_type, sha in lock_files.items():
-            logger.info("    %s: %s...", lock_type, sha[:16])
+            logger.info(f"    {lock_type}: {sha[:16]}...")
     else:
         logger.info("  lock_files     : (none found)")
 
@@ -122,11 +123,11 @@ def main() -> int:
     # -----------------------------------------------------------------------
     basic_path = out_dir / "snapshot_basic.json"
     basic_path.write_text(json.dumps(snap, indent=2))
-    logger.info("Basic snapshot written to   : %s", basic_path)
+    logger.info(f"Basic snapshot written to   : {basic_path}")
 
     repos_path = out_dir / "snapshot_with_repos.json"
     repos_path.write_text(json.dumps(snap_with_repos, indent=2))
-    logger.info("Dev-repos snapshot written to: %s", repos_path)
+    logger.info(f"Dev-repos snapshot written to: {repos_path}")
 
     return 0
 

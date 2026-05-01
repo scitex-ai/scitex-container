@@ -6,7 +6,7 @@ operations (build, sandbox, etc.) require Apptainer or Docker to be installed
 on the host; those sections use try/except so this script runs cleanly in
 environments without container tools.
 
-Output artifacts are written to ``examples/03_python_api_out/``.
+Output artifacts are written to ``CONFIG.SDIR_RUN/`` (managed by stx.session).
 
 Usage:
     python 03_python_api.py
@@ -14,16 +14,14 @@ Usage:
 
 import inspect
 import json
-import logging
 import shutil
 from pathlib import Path
 
+import scitex as stx
 import scitex_container
 
-logger = logging.getLogger(__name__)
 
-
-def _describe(report, mod):
+def _describe(report, mod, logger):
     for name in sorted(mod.__all__):
         obj = getattr(mod, name, None)
         if obj is None:
@@ -35,22 +33,25 @@ def _describe(report, mod):
                 sig_str = "()"
             doc = inspect.getdoc(obj) or ""
             first_line = doc.split("\n")[0].strip() if doc else ""
-            logger.info("  %s%s", name, sig_str)
+            logger.info(f"  {name}{sig_str}")
             if first_line:
-                logger.info("    %s", first_line)
+                logger.info(f"    {first_line}")
             report[name] = {"signature": sig_str, "doc": first_line}
         elif isinstance(obj, type):
-            logger.info("  %s  [class]", name)
+            logger.info(f"  {name}  [class]")
             report[name] = {"kind": "class"}
         else:
-            logger.info("  %s = %r", name, obj)
+            logger.info(f"  {name} = {obj!r}")
             report[name] = {"value": repr(obj)}
 
 
-def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-    out_dir = Path(__file__).parent / "03_python_api_out"
+@stx.session
+def main(
+    CONFIG=stx.session.INJECTED,
+    logger=stx.session.INJECTED,
+):
+    """Demonstrate scitex_container Python API usage."""
+    out_dir = Path(CONFIG.SDIR_RUN)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # -----------------------------------------------------------------------
@@ -60,8 +61,9 @@ def main() -> int:
     logger.info("scitex_container Python API demo")
     logger.info("=" * 60)
     logger.info("")
-    logger.info("Version : %s", scitex_container.__version__)
-    logger.info("Package : %s", scitex_container.__file__)
+
+    logger.info(f"Version : {scitex_container.__version__}")
+    logger.info(f"Package : {scitex_container.__file__}")
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -71,15 +73,15 @@ def main() -> int:
     for name in scitex_container.__all__:
         obj = getattr(scitex_container, name)
         if inspect.ismodule(obj):
-            logger.info("  %s  [module]", name)
+            logger.info(f"  {name}  [module]")
         elif callable(obj):
             try:
                 sig = inspect.signature(obj)
             except (ValueError, TypeError):
                 sig = "()"
-            logger.info("  %s%s", name, sig)
+            logger.info(f"  {name}{sig}")
         else:
-            logger.info("  %s = %r", name, obj)
+            logger.info(f"  {name} = {obj!r}")
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -89,7 +91,7 @@ def main() -> int:
     logger.info("scitex_container.apptainer - functions and constants:")
     logger.info("-" * 60)
     apptainer_report: dict = {}
-    _describe(apptainer_report, scitex_container.apptainer)
+    _describe(apptainer_report, scitex_container.apptainer, logger)
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -99,7 +101,7 @@ def main() -> int:
     logger.info("scitex_container.docker - functions:")
     logger.info("-" * 60)
     docker_report: dict = {}
-    _describe(docker_report, scitex_container.docker)
+    _describe(docker_report, scitex_container.docker, logger)
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -109,7 +111,7 @@ def main() -> int:
     logger.info("scitex_container.host - functions and constants:")
     logger.info("-" * 60)
     host_report: dict = {}
-    _describe(host_report, scitex_container.host)
+    _describe(host_report, scitex_container.host, logger)
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -120,13 +122,13 @@ def main() -> int:
     logger.info("-" * 60)
     try:
         cmd = scitex_container.apptainer.detect_container_cmd()
-        logger.info("  Apptainer command detected: %r", cmd)
+        logger.info(f"  Apptainer command detected: {cmd!r}")
     except Exception as exc:
-        logger.info("  Apptainer not detected: %s", exc)
+        logger.info(f"  Apptainer not detected: {exc}")
 
     # Docker: check via shutil.which since there is no dedicated detector
     docker_bin = shutil.which("docker")
-    logger.info("  Docker binary: %s", docker_bin or "not found")
+    logger.info(f"  Docker binary: {docker_bin or 'not found'}")
     logger.info("")
 
     # -----------------------------------------------------------------------
@@ -140,7 +142,7 @@ def main() -> int:
     }
     report_path = out_dir / "api_report.json"
     report_path.write_text(json.dumps(report, indent=2))
-    logger.info("API report written to: %s", report_path)
+    logger.info(f"API report written to: {report_path}")
 
     return 0
 
