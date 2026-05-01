@@ -9,13 +9,92 @@ import click
 
 
 @click.command("show-status")
-def status():
-    """Show unified status dashboard (Apptainer + host packages + Docker)."""
+@click.option(
+    "--json", "as_json", is_flag=True, help="Emit machine-readable JSON output."
+)
+@click.pass_context
+def status(ctx, as_json):
+    """Show unified status dashboard (Apptainer + host packages + Docker).
+
+    \b
+    Example:
+      $ scitex-container show-status
+      $ scitex-container show-status --json
+    """
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
+
+    if as_json:
+        import json as _json
+
+        click.echo(_json.dumps(_collect_status(), indent=2))
+        return
+
     _show_apptainer_status()
     click.echo()
     _show_host_status()
     click.echo()
     _show_docker_status()
+
+
+def _collect_status() -> dict:
+    """Aggregate status sections into a JSON-serialisable dict."""
+    payload: dict = {"apptainer": {}, "host": {}, "docker": {}}
+
+    # Apptainer
+    try:
+        from pathlib import Path
+
+        from scitex_container.apptainer import (
+            find_containers_dir,
+            get_active_version,
+            list_versions,
+        )
+
+        cdir = find_containers_dir()
+        active = get_active_version(cdir)
+        versions = list_versions(cdir)
+        current_link = Path(cdir) / "current.sif"
+        mode = None
+        if current_link.is_symlink():
+            target = current_link.resolve()
+            mode = "sandbox" if target.is_dir() else "SIF"
+        elif active:
+            mode = "SIF"
+        payload["apptainer"] = {
+            "containers_dir": str(cdir),
+            "active": active,
+            "mode": mode,
+            "versions": versions,
+        }
+    except FileNotFoundError as exc:
+        payload["apptainer"] = {"error": str(exc)}
+    except Exception as exc:
+        payload["apptainer"] = {"error": str(exc)}
+
+    # Host
+    try:
+        from scitex_container.host import check_packages
+
+        payload["host"] = check_packages()
+    except Exception as exc:
+        payload["host"] = {"error": str(exc)}
+
+    # Docker
+    docker_payload: dict = {}
+    for env in ("dev", "prod"):
+        try:
+            from scitex_container.docker import status as docker_status
+
+            docker_payload[env] = docker_status(env=env)
+        except FileNotFoundError:
+            docker_payload[env] = {"error": "no compose file found"}
+        except Exception as exc:
+            docker_payload[env] = {"error": str(exc)}
+    payload["docker"] = docker_payload
+
+    return payload
 
 
 # ---------------------------------------------------------------------------

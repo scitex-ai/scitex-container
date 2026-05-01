@@ -28,8 +28,28 @@ def register(main: click.Group) -> None:
 @click.option("--base", is_flag=True, help="Build the base image instead of final.")
 @click.option("--force", "-f", is_flag=True, help="Force rebuild even if up-to-date.")
 @click.option("--output-dir", "-o", type=click.Path(), help="Output directory.")
-def build(name, sandbox, base, force, output_dir):
-    """Build a SIF or sandbox from a .def file."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def build(name, sandbox, base, force, output_dir, dry_run, yes):
+    """Build a SIF or sandbox from a .def file.
+
+    \b
+    Example:
+      $ scitex-container apptainer build
+      $ scitex-container apptainer build scitex-final --force
+      $ scitex-container apptainer build --sandbox --output-dir ./containers
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would build def={name} sandbox={sandbox} base={base} "
+            f"force={force} output_dir={output_dir}"
+        )
+        return
+    _ = yes  # accepted for parity; build does not prompt
     from scitex_container.apptainer import build as do_build
 
     try:
@@ -59,7 +79,13 @@ def build(name, sandbox, base, force, output_dir):
     "--output-dir", "-o", type=click.Path(), help="Output directory for lock files."
 )
 def freeze(sif_path, output_dir):
-    """Extract pinned package versions (pip, dpkg, npm) from a built SIF."""
+    """Extract pinned package versions (pip, dpkg, npm) from a built SIF.
+
+    \b
+    Example:
+      $ scitex-container apptainer freeze ./containers/scitex-v1.0.sif
+      $ scitex-container apptainer freeze foo.sif -o ./locks
+    """
     from scitex_container.apptainer import freeze as do_freeze
 
     try:
@@ -79,8 +105,20 @@ def freeze(sif_path, output_dir):
 @click.option(
     "--dir", "-d", "containers_dir", type=click.Path(), help="Containers directory."
 )
-def list_containers(containers_dir):
-    """List available container versions."""
+@click.option(
+    "--json", "as_json", is_flag=True, help="Emit machine-readable JSON output."
+)
+@click.pass_context
+def list_containers(ctx, containers_dir, as_json):
+    """List available container versions.
+
+    \b
+    Example:
+      $ scitex-container apptainer list
+      $ scitex-container apptainer list --json
+      $ scitex-container apptainer list -d ./containers
+    """
+    import json as _json
     from pathlib import Path
 
     from scitex_container.apptainer import (
@@ -89,18 +127,39 @@ def list_containers(containers_dir):
         list_versions,
     )
 
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
+
     try:
         cdir = Path(containers_dir) if containers_dir else find_containers_dir()
     except FileNotFoundError as exc:
+        if as_json:
+            click.echo(_json.dumps({"error": str(exc), "versions": []}))
+            raise SystemExit(1)
         click.secho(str(exc), fg="red", err=True)
         raise SystemExit(1)
 
     versions = list_versions(cdir)
+    active = get_active_version(cdir)
+
+    if as_json:
+        click.echo(
+            _json.dumps(
+                {
+                    "containers_dir": str(cdir),
+                    "active": active,
+                    "versions": versions,
+                },
+                indent=2,
+            )
+        )
+        return
+
     if not versions:
         click.echo(f"No versioned SIFs found in {cdir}")
         return
 
-    active = get_active_version(cdir)
     click.secho(f"Container versions in {cdir}:", fg="cyan")
     for v in versions:
         marker = click.style(" *", fg="green") if v["active"] else "  "
@@ -121,7 +180,13 @@ def list_containers(containers_dir):
     "--sudo", "use_sudo", is_flag=True, help="Use sudo for symlink operations."
 )
 def switch(version, containers_dir, use_sudo):
-    """Switch active container to VERSION."""
+    """Switch active container to VERSION.
+
+    \b
+    Example:
+      $ scitex-container apptainer switch 1.2.3
+      $ scitex-container apptainer switch 1.2.3 --sudo
+    """
     from pathlib import Path
 
     from scitex_container.apptainer import (
@@ -165,8 +230,28 @@ def switch(version, containers_dir, use_sudo):
 @click.option(
     "--sudo", "use_sudo", is_flag=True, help="Use sudo for symlink operations."
 )
-def rollback(containers_dir, use_sudo):
-    """Revert to the previous container version."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def rollback(containers_dir, use_sudo, dry_run, yes):
+    """Revert to the previous container version.
+
+    \b
+    Example:
+      $ scitex-container apptainer rollback
+      $ scitex-container apptainer rollback --sudo
+      $ scitex-container apptainer rollback --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would rollback in dir={containers_dir or '<auto>'} "
+            f"sudo={use_sudo}"
+        )
+        return
+    _ = yes  # accepted for parity
     from pathlib import Path
 
     from scitex_container.apptainer import find_containers_dir, get_active_version
@@ -211,8 +296,28 @@ def rollback(containers_dir, use_sudo):
     type=click.Path(),
     help="Source containers directory.",
 )
-def deploy(target_dir, containers_dir):
-    """Copy active SIF to production target directory."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def deploy(target_dir, containers_dir, dry_run, yes):
+    """Copy active SIF to production target directory.
+
+    \b
+    Example:
+      $ scitex-container apptainer deploy
+      $ scitex-container apptainer deploy --target /opt/scitex/singularity
+      $ scitex-container apptainer deploy --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would deploy from dir={containers_dir or '<auto>'} "
+            f"to target={target_dir}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import find_containers_dir
@@ -250,8 +355,27 @@ def deploy(target_dir, containers_dir):
 @click.option(
     "--dir", "-d", "containers_dir", type=click.Path(), help="Containers directory."
 )
-def cleanup(keep, containers_dir):
-    """Remove old container versions, keeping the N most recent."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def cleanup(keep, containers_dir, dry_run, yes):
+    """Remove old container versions, keeping the N most recent.
+
+    \b
+    Example:
+      $ scitex-container apptainer clean
+      $ scitex-container apptainer clean --keep 5
+      $ scitex-container apptainer clean --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would clean dir={containers_dir or '<auto>'} keep={keep}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import find_containers_dir
@@ -279,7 +403,14 @@ def cleanup(keep, containers_dir):
 @click.option("--lock-dir", help="Directory containing lock files.")
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
 def verify(sif_path, def_path, lock_dir, as_json):
-    """Verify SIF integrity: hash, .def origin, and lock file consistency."""
+    """Verify SIF integrity: hash, .def origin, and lock file consistency.
+
+    \b
+    Example:
+      $ scitex-container apptainer verify
+      $ scitex-container apptainer verify ./containers/scitex-v1.0.sif
+      $ scitex-container apptainer verify --json
+    """
     import json as json_mod
 
     from scitex_container.apptainer import (

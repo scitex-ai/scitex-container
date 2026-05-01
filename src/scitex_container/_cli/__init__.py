@@ -50,16 +50,40 @@ def _print_help_recursive(ctx, group, prefix="scitex-container"):
                 click.echo(cmd.get_help(sub_ctx))
 
 
-@click.group()
-@click.version_option(package_name="scitex-container")
+@click.group(invoke_without_command=True)
+@click.version_option(
+    package_name="scitex-container",
+    prog_name="scitex-container",
+    message="%(prog)s %(version)s",
+)
 @click.option(
     "--help-recursive", is_flag=True, help="Show help for all commands recursively"
 )
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit machine-readable JSON output (where supported).",
+)
 @click.pass_context
-def main(ctx, help_recursive):
-    """scitex-container: Unified container management (Apptainer + Docker + host)."""
+def main(ctx, help_recursive, as_json):
+    """scitex-container: Unified container management (Apptainer + Docker + host).
+
+    \b
+    Configuration precedence (highest -> lowest):
+      1. Explicit CLI flags
+      2. ./config.yaml (project-local)
+      3. $SCITEX_CONTAINER_CONFIG (path to a YAML file)
+      4. ~/.scitex/container/config.yaml (user-wide)
+      5. Built-in defaults
+    """
+    ctx.ensure_object(dict)
+    ctx.obj["as_json"] = as_json
     if help_recursive:
         _print_help_recursive(ctx, main)
+        ctx.exit(0)
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
         ctx.exit(0)
 
 
@@ -133,17 +157,63 @@ main.add_command(_deprecated_top_level("env-snapshot", "save-env-snapshot"))
 @click.option(
     "-v", "--verbose", count=True, help="Verbosity: -v with signatures, -vv +docstring"
 )
-def list_python_apis(verbose: int):
-    """List scitex_container Python APIs (apptainer, docker, host modules)."""
+@click.option(
+    "--json", "as_json", is_flag=True, help="Emit machine-readable JSON output."
+)
+@click.pass_context
+def list_python_apis(ctx, verbose: int, as_json: bool):
+    """List scitex_container Python APIs (apptainer, docker, host modules).
+
+    \b
+    Example:
+      $ scitex-container list-python-apis
+      $ scitex-container list-python-apis -vv
+      $ scitex-container list-python-apis --json
+    """
     import scitex_container.apptainer as apptainer_mod
     import scitex_container.docker as docker_mod
     import scitex_container.host as host_mod
+
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
 
     modules = [
         ("apptainer", apptainer_mod),
         ("docker", docker_mod),
         ("host", host_mod),
     ]
+
+    if as_json:
+        import json as _json
+
+        envelope: dict = {"package": "scitex_container", "modules": {}}
+        for mod_name, mod in modules:
+            public_names = [n for n in dir(mod) if not n.startswith("_")]
+            entries = []
+            for name in sorted(public_names):
+                obj = getattr(mod, name, None)
+                if obj is None:
+                    continue
+                entry: dict = {"name": name}
+                if isinstance(obj, type):
+                    entry["kind"] = "class"
+                elif callable(obj):
+                    entry["kind"] = "callable"
+                    try:
+                        entry["signature"] = str(inspect.signature(obj))
+                    except (ValueError, TypeError):
+                        entry["signature"] = "()"
+                    doc = inspect.getdoc(obj)
+                    if doc:
+                        entry["doc"] = doc.split("\n")[0].strip()
+                else:
+                    entry["kind"] = "value"
+                    entry["repr"] = repr(obj)
+                entries.append(entry)
+            envelope["modules"][mod_name] = entries
+        click.echo(_json.dumps(envelope, indent=2))
+        return
 
     for mod_name, mod in modules:
         public_names = [n for n in dir(mod) if not n.startswith("_")]

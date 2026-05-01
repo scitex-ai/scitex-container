@@ -17,8 +17,25 @@ def docker():
 @click.option(
     "--env", "-e", default="dev", show_default=True, help="Environment (dev/prod)."
 )
-def docker_rebuild(env):
-    """Rebuild Docker containers without cache."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def docker_rebuild(env, dry_run, yes):
+    """Rebuild Docker containers without cache.
+
+    \b
+    Example:
+      $ scitex-container docker rebuild
+      $ scitex-container docker rebuild --env prod
+      $ scitex-container docker rebuild --dry-run
+    """
+    if dry_run:
+        click.echo(f"[dry-run] would rebuild docker compose env={env} (no-cache)")
+        return
+    _ = yes
     from scitex_container.docker import rebuild as do_rebuild
 
     click.secho(f"Rebuilding Docker containers for env={env}...", fg="cyan")
@@ -33,8 +50,25 @@ def docker_rebuild(env):
 @click.option(
     "--env", "-e", default="dev", show_default=True, help="Environment (dev/prod)."
 )
-def docker_restart(env):
-    """Restart Docker containers (down then up -d)."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def docker_restart(env, dry_run, yes):
+    """Restart Docker containers (down then up -d).
+
+    \b
+    Example:
+      $ scitex-container docker restart
+      $ scitex-container docker restart --env prod
+      $ scitex-container docker restart --dry-run
+    """
+    if dry_run:
+        click.echo(f"[dry-run] would restart docker compose env={env}")
+        return
+    _ = yes
     from scitex_container.docker import restart as do_restart
 
     click.secho(f"Restarting Docker containers for env={env}...", fg="cyan")
