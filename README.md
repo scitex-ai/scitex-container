@@ -227,7 +227,9 @@ scitex-dev skills export --package scitex-container  # Export to Claude Code
 
 ## Part of SciTeX
 
-scitex-container is part of [SciTeX](https://scitex.ai). When used inside the orchestrator package `scitex`, container operations integrate with the broader ecosystem — for example, `scitex-clew` can consume environment snapshots produced by `scitex-container` to track reproducibility provenance across experiments.
+`scitex-container` is part of [**SciTeX**](https://scitex.ai). Install via
+the umbrella with `pip install scitex[container]` to use as
+`scitex.container` (Python) or `scitex container ...` (CLI).
 
 ```python
 import scitex_container
