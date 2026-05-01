@@ -1,18 +1,19 @@
 # SciTeX Container
 
+<!-- scitex-badges:start -->
+[![PyPI](https://img.shields.io/pypi/v/scitex-container.svg)](https://pypi.org/project/scitex-container/)
+[![Python](https://img.shields.io/pypi/pyversions/scitex-container.svg)](https://pypi.org/project/scitex-container/)
+[![Tests](https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml)
+[![Install Test](https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml)
+[![Coverage](https://codecov.io/gh/ywatanabe1989/scitex-container/graph/badge.svg)](https://codecov.io/gh/ywatanabe1989/scitex-container)
+[![Docs](https://readthedocs.org/projects/scitex-container/badge/?version=latest)](https://scitex-container.readthedocs.io/en/latest/)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+<!-- scitex-badges:end -->
+
 <p align="center">
   <a href="https://scitex.ai">
     <img src="docs/scitex-logo-blue-cropped.png" alt="SciTeX" width="400">
   </a>
-</p>
-
-<p align="center"><b>Unified container management for Apptainer and Docker</b></p>
-
-<p align="center">
-  <a href="https://badge.fury.io/py/scitex-container"><img src="https://badge.fury.io/py/scitex-container.svg" alt="PyPI version"></a>
-  <a href="https://scitex-container.readthedocs.io/"><img src="https://readthedocs.org/projects/scitex-container/badge/?version=latest" alt="Documentation"></a>
-  <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/ci.yml"><img src="https://github.com/ywatanabe1989/scitex-container/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -23,20 +24,11 @@
 
 ## Problem and Solution
 
-
 | # | Problem | Solution |
 |---|---------|----------|
 | 1 | **"Reproducible" containers drift** -- `Dockerfile` builds a different image each time because `apt-get install python3` floats | **Versioned SIF** -- `scitex-container build` pins the image content hash; `switch-version 2.19.5` is an atomic symlink flip |
 | 2 | **Rollback requires docker tags + manual surgery** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
 | 3 | **Paper "env" is `pip freeze`** -- useless without the python version, OS libs, CUDA driver | **`env_snapshot()`** -- full reproducibility capsule: container tag + pip freeze + conda env + apt packages + git commits, serialized as a single file for manuscript attachments |
-
-## Problem
-
-Research computing environments depend on containers (Apptainer/Singularity for High-Performance Computing (HPC), Docker for cloud services), yet managing them involves disparate tools, manual version tracking, and no simple way to verify reproducibility. Switching between container runtimes, managing sandbox development, and keeping host-side dependencies aligned with container expectations are recurring pain points.
-
-## Solution
-
-`scitex-container` provides a single Python package with four interfaces — Python API, Command-Line Interface (CLI), Model Context Protocol (MCP) server, and Skills — to manage Apptainer and Docker containers uniformly. It handles building, versioning, sandboxing, host-package verification, and environment snapshots for reproducibility, all through one consistent interface.
 
 ## Installation
 
@@ -217,7 +209,7 @@ scitex-container mcp list-tools -vv
 </details>
 
 <details>
-<summary><strong>Skills — for AI Agent Discovery</strong></summary>
+<summary><strong>Skills</strong></summary>
 
 <br>
 
@@ -241,7 +233,9 @@ scitex-dev skills export --package scitex-container  # Export to Claude Code
 
 ## Part of SciTeX
 
-scitex-container is part of [SciTeX](https://scitex.ai). When used inside the orchestrator package `scitex`, container operations integrate with the broader ecosystem — for example, `scitex-clew` can consume environment snapshots produced by `scitex-container` to track reproducibility provenance across experiments.
+`scitex-container` is part of [**SciTeX**](https://scitex.ai). Install via
+the umbrella with `pip install scitex[container]` to use as
+`scitex.container` (Python) or `scitex container ...` (CLI).
 
 ```python
 import scitex_container

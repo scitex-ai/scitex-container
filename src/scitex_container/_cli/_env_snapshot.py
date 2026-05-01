@@ -10,7 +10,7 @@ import json
 import click
 
 
-@click.command("env-snapshot")
+@click.command("save-env-snapshot")
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
 @click.option(
     "--dev-repo",
@@ -23,21 +23,43 @@ import click
     default="",
     help="Containers directory (auto-detected if not given).",
 )
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+@click.pass_context
 def env_snapshot_cmd(
-    as_json: bool, dev_repo: tuple[str, ...], containers_dir: str
+    ctx,
+    as_json: bool,
+    dev_repo: tuple[str, ...],
+    containers_dir: str,
+    dry_run: bool,
+    yes: bool,
 ) -> None:
     """Capture environment snapshot for reproducibility (Clew integration).
 
     Records container version, SIF hash, host package versions, dev repo
     git commits, and lock file hashes as a JSON document.
 
-    Examples:
-
     \b
-        scitex-container env-snapshot
-        scitex-container env-snapshot --json
-        scitex-container env-snapshot --dev-repo ~/proj/scitex-python
+    Example:
+      $ scitex-container save-env-snapshot
+      $ scitex-container save-env-snapshot --json
+      $ scitex-container save-env-snapshot --dev-repo ~/proj/scitex-python
     """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would capture env snapshot containers_dir="
+            f"{containers_dir or '<auto>'} dev_repos={list(dev_repo)}"
+        )
+        return
+    _ = yes
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
+
     from scitex_container import env_snapshot
 
     snap = env_snapshot(

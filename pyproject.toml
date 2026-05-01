@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scitex-container"
-version = "0.1.8"
+version = "0.1.10"
 description = "Unified container management for Apptainer and Docker"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -18,10 +18,17 @@ dependencies = [
     "click",
     "packaging",
     "scitex-dev>=0.2.0",
+    "scitex-config>=0.3.0",
 ]
 
 [project.optional-dependencies]
-mcp = ["fastmcp>=2.0.0"]
+mcp = [
+    "fastmcp>=2.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
 docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",
@@ -29,8 +36,9 @@ docs = [
     "sphinx-copybutton>=0.5",
     "sphinx-autodoc-typehints>=1.25",
 ]
-dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
-all = ["scitex-container[mcp,docs,dev]"]
+all = [
+    "scitex-container[mcp]",
+]
 
 [project.scripts]
 scitex-container = "scitex_container._cli:main"
@@ -54,6 +62,9 @@ packages = ["src/scitex_container"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+
+[tool.scitex-linter]
+library_dirs = ["src", "tests", "examples"]
 
 [tool.coverage.run]
 source = ["scitex_container"]

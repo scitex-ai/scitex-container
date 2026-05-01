@@ -19,8 +19,31 @@ def host():
 @click.option(
     "--all", "install_all", is_flag=True, default=False, help="Install all packages."
 )
-def host_install(texlive, imagemagick, install_all):
-    """Install host packages required by SciTeX containers (requires sudo)."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def host_install(texlive, imagemagick, install_all, dry_run, yes):
+    """Install host packages required by SciTeX containers (requires sudo).
+
+    \b
+    Example:
+      $ scitex-container host install
+      $ scitex-container host install --texlive
+      $ scitex-container host install --all --dry-run
+    """
+    if dry_run:
+        # If no specific flag, default to all (mirrors live behaviour).
+        if not texlive and not imagemagick:
+            install_all = True
+        click.echo(
+            f"[dry-run] would install host packages "
+            f"texlive={texlive} imagemagick={imagemagick} all={install_all}"
+        )
+        return
+    _ = yes  # accepted for parity; install_packages may prompt via sudo
     from scitex_container.host import install_packages
 
     # Default to all when no specific flag given
@@ -53,7 +76,12 @@ def host_install(texlive, imagemagick, install_all):
 
 @host.command(name="check")
 def host_check():
-    """Check which host packages are installed."""
+    """Check which host packages are installed.
+
+    \b
+    Example:
+      $ scitex-container host check
+    """
     from scitex_container.host import check_packages
 
     packages = check_packages()
@@ -76,19 +104,57 @@ def host_check():
             )
 
 
-@host.command(name="mounts")
+@host.command(
+    name="mounts",
+    hidden=True,
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.pass_context
+def host_mounts_deprecated(ctx):
+    """(deprecated) Renamed to `show-mounts`."""
+    click.echo(
+        "error: `scitex-container host mounts` was renamed to "
+        "`scitex-container host show-mounts`.\n"
+        "Re-run with: scitex-container host show-mounts [...]",
+        err=True,
+    )
+    ctx.exit(2)
+
+
+@host.command(name="show-mounts")
 @click.option(
     "--texlive-prefix",
     default="/usr",
     show_default=True,
     help="TeXLive installation prefix.",
 )
-def host_mounts(texlive_prefix):
-    """Show bind mount configuration for host packages."""
+@click.option(
+    "--json", "as_json", is_flag=True, help="Emit machine-readable JSON output."
+)
+@click.pass_context
+def host_mounts(ctx, texlive_prefix, as_json):
+    """Show bind mount configuration for host packages.
+
+    \b
+    Example:
+      $ scitex-container host show-mounts
+      $ scitex-container host show-mounts --json
+      $ scitex-container host show-mounts --texlive-prefix /opt/texlive
+    """
+    import json as _json
+
     from scitex_container.host import get_mount_config
+
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
 
     config = get_mount_config(texlive_prefix=texlive_prefix)
     mounts = config.get("mounts", [])
+
+    if as_json:
+        click.echo(_json.dumps(config, indent=2))
+        return
 
     if not mounts:
         click.secho("No host mounts configured.", fg="yellow")

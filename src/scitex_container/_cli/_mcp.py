@@ -80,16 +80,41 @@ def _format_tool_signature(tool_name: str, tool_obj) -> str:
 @click.option(
     "-v", "--verbose", count=True, help="Verbosity: -v signatures, -vv +description"
 )
-def list_tools(verbose: int):
-    """List all registered MCP tools with signatures."""
+@click.option(
+    "--json", "as_json", is_flag=True, help="Emit machine-readable JSON output."
+)
+@click.pass_context
+def list_tools(ctx, verbose: int, as_json: bool):
+    """List all registered MCP tools with signatures.
+
+    \b
+    Example:
+      $ scitex-container mcp list-tools
+      $ scitex-container mcp list-tools -vv
+      $ scitex-container mcp list-tools --json
+    """
+    import json as _json
+
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
+
     try:
         from scitex_container.mcp_server import FASTMCP_AVAILABLE
         from scitex_container.mcp_server import mcp as mcp_server
     except ImportError:
+        if as_json:
+            click.echo(
+                _json.dumps({"error": "Could not import MCP server", "tools": []})
+            )
+            raise SystemExit(1) from None
         click.secho("ERROR: Could not import MCP server", fg="red", err=True)
         raise SystemExit(1) from None
 
     if not FASTMCP_AVAILABLE:
+        if as_json:
+            click.echo(_json.dumps({"error": "FastMCP not installed", "tools": []}))
+            raise SystemExit(1)
         click.secho(
             "ERROR: FastMCP not installed. Run: pip install 'scitex-container[mcp]'",
             fg="red",
@@ -98,6 +123,11 @@ def list_tools(verbose: int):
         raise SystemExit(1)
 
     if mcp_server is None:
+        if as_json:
+            click.echo(
+                _json.dumps({"error": "MCP server not initialized", "tools": []})
+            )
+            raise SystemExit(1)
         click.secho("ERROR: MCP server not initialized", fg="red", err=True)
         raise SystemExit(1)
 
@@ -105,6 +135,31 @@ def list_tools(verbose: int):
     from scitex_dev import get_tools_sync
 
     tools_map = get_tools_sync(mcp_server)
+
+    if as_json:
+        import inspect as _inspect
+
+        tools_payload = []
+        for tool_name in sorted(tools_map.keys()):
+            tool_obj = tools_map[tool_name]
+            entry: dict = {"name": tool_name}
+            params_schema = getattr(tool_obj, "parameters", None)
+            if params_schema:
+                entry["parameters"] = params_schema
+            desc = getattr(tool_obj, "description", None)
+            if desc and isinstance(desc, str):
+                entry["description"] = desc
+            elif hasattr(tool_obj, "fn") and tool_obj.fn:
+                doc = _inspect.getdoc(tool_obj.fn)
+                if doc:
+                    entry["description"] = doc
+            tools_payload.append(entry)
+        click.echo(
+            _json.dumps(
+                {"package": "scitex-container", "tools": tools_payload}, indent=2
+            )
+        )
+        return
 
     if not tools_map:
         click.secho("No tools registered (or unable to inspect).", fg="yellow")
@@ -136,7 +191,13 @@ def list_tools(verbose: int):
 @mcp.command("doctor")
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed diagnostics")
 def doctor(verbose: bool):
-    """Check FastMCP availability and MCP tool health."""
+    """Check FastMCP availability and MCP tool health.
+
+    \b
+    Example:
+      $ scitex-container mcp doctor
+      $ scitex-container mcp doctor -v
+    """
     issues = []
 
     click.secho("scitex-container MCP Doctor", fg="cyan", bold=True)
@@ -228,8 +289,28 @@ def doctor(verbose: bool):
 @click.option(
     "--port", "-p", default=8086, type=int, help="Port to bind (default: 8086)"
 )
-def start(transport: str, host: str, port: int):
-    """Start the MCP server."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def start(transport: str, host: str, port: int, dry_run: bool, yes: bool):
+    """Start the MCP server.
+
+    \b
+    Example:
+      $ scitex-container mcp start
+      $ scitex-container mcp start --transport http --port 8086
+      $ scitex-container mcp start --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would start MCP server transport={transport} "
+            f"host={host} port={port}"
+        )
+        return
+    _ = yes
     try:
         from scitex_container.mcp_server import FASTMCP_AVAILABLE
         from scitex_container.mcp_server import mcp as mcp_server

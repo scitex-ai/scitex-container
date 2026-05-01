@@ -243,7 +243,7 @@ async def sandbox_create_handler(
         }
 
     try:
-        result = sandbox_create(source_sif=sif_path, output_dir=out_path)
+        result = sandbox_create(source=sif_path, output_dir=out_path)
         return {"success": True, "sandbox_dir": str(result)}
     except (FileNotFoundError, RuntimeError) as exc:
         return {"success": False, "error": str(exc)}

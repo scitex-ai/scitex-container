@@ -1,6 +1,8 @@
 ---
 skill: scitex-container/quick-start
 description: Installation and first-use examples for scitex-container
+name: quick-start
+tags: [scitex-container, scitex-package]
 ---
 
 # Quick Start

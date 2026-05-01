@@ -22,8 +22,28 @@ def sandbox():
 @click.option(
     "--output", "-o", "output_dir", type=click.Path(), help="Explicit output directory."
 )
-def sandbox_create(source_path, containers_dir, output_dir):
-    """Build a sandbox from a SIF image or .def file (timestamped)."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def sandbox_create(source_path, containers_dir, output_dir, dry_run, yes):
+    """Build a sandbox from a SIF image or .def file (timestamped).
+
+    \b
+    Example:
+      $ scitex-container sandbox create -s ./scitex.sif
+      $ scitex-container sandbox create -s ./scitex.def -o ./containers
+      $ scitex-container sandbox create -s ./scitex.sif --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would create sandbox from source={source_path} "
+            f"dir={containers_dir or '<auto>'} output={output_dir or '<auto>'}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import sandbox_create as do_create
@@ -51,7 +71,13 @@ def sandbox_create(source_path, containers_dir, output_dir):
 @click.argument("command", nargs=-1, required=True)
 @click.option("--sandbox-dir", "-s", type=click.Path(), help="Sandbox directory path.")
 def sandbox_maintain(command, sandbox_dir):
-    """Run a maintenance COMMAND inside a sandbox (writable + fakeroot)."""
+    """Run a maintenance COMMAND inside a sandbox (writable + fakeroot).
+
+    \b
+    Example:
+      $ scitex-container sandbox maintain -s ./scitex-sandbox apt-get update
+      $ scitex-container sandbox maintain -s ./scitex-sandbox pip install foo
+    """
     from pathlib import Path
 
     from scitex_container.apptainer import sandbox_maintain as do_maintain
@@ -75,20 +101,49 @@ def sandbox_maintain(command, sandbox_dir):
 @click.option(
     "--dir", "-d", "containers_dir", type=click.Path(), help="Containers directory."
 )
-def sandbox_list(containers_dir):
-    """List versioned sandbox directories."""
+@click.option(
+    "--json", "as_json", is_flag=True, help="Emit machine-readable JSON output."
+)
+@click.pass_context
+def sandbox_list(ctx, containers_dir, as_json):
+    """List versioned sandbox directories.
+
+    \b
+    Example:
+      $ scitex-container sandbox list
+      $ scitex-container sandbox list --json
+      $ scitex-container sandbox list -d ./containers
+    """
+    import json as _json
     from pathlib import Path
 
     from scitex_container.apptainer import get_active_sandbox, list_sandboxes
 
+    ctx.ensure_object(dict)
+    if not as_json:
+        as_json = bool(ctx.obj.get("as_json"))
+
     cdir = Path(containers_dir) if containers_dir else Path.cwd()
     sandboxes = list_sandboxes(cdir)
+    active = get_active_sandbox(cdir)
+
+    if as_json:
+        click.echo(
+            _json.dumps(
+                {
+                    "containers_dir": str(cdir),
+                    "active": active,
+                    "sandboxes": sandboxes,
+                },
+                indent=2,
+            )
+        )
+        return
 
     if not sandboxes:
         click.echo(f"No versioned sandboxes found in {cdir}")
         return
 
-    active = get_active_sandbox(cdir)
     click.secho(f"Sandboxes in {cdir}:", fg="cyan")
     for sb in sandboxes:
         marker = click.style(" *", fg="green") if sb["active"] else "  "
@@ -107,7 +162,13 @@ def sandbox_list(containers_dir):
 )
 @click.option("--sudo", "use_sudo", is_flag=True, help="Use sudo for symlinks.")
 def sandbox_switch(version, containers_dir, use_sudo):
-    """Switch active sandbox to VERSION (timestamp)."""
+    """Switch active sandbox to VERSION (timestamp).
+
+    \b
+    Example:
+      $ scitex-container sandbox switch 20260301T120000
+      $ scitex-container sandbox switch 20260301T120000 --sudo
+    """
     from pathlib import Path
 
     from scitex_container.apptainer import get_active_sandbox, switch_sandbox
@@ -135,8 +196,28 @@ def sandbox_switch(version, containers_dir, use_sudo):
     "--dir", "-d", "containers_dir", type=click.Path(), help="Containers directory."
 )
 @click.option("--sudo", "use_sudo", is_flag=True, help="Use sudo for symlinks.")
-def sandbox_rollback(containers_dir, use_sudo):
-    """Revert to the previous sandbox version."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def sandbox_rollback(containers_dir, use_sudo, dry_run, yes):
+    """Revert to the previous sandbox version.
+
+    \b
+    Example:
+      $ scitex-container sandbox rollback
+      $ scitex-container sandbox rollback --sudo
+      $ scitex-container sandbox rollback --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would rollback sandbox in dir={containers_dir or '<cwd>'} "
+            f"sudo={use_sudo}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import get_active_sandbox, rollback_sandbox
@@ -153,7 +234,24 @@ def sandbox_rollback(containers_dir, use_sudo):
     click.secho(f"Rolled back sandbox {old} -> {new_ver}", fg="green")
 
 
-@sandbox.command(name="cleanup")
+@sandbox.command(
+    name="cleanup",
+    hidden=True,
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.pass_context
+def sandbox_cleanup_deprecated(ctx):
+    """(deprecated) Renamed to `clean`."""
+    click.echo(
+        "error: `scitex-container sandbox cleanup` was renamed to "
+        "`scitex-container sandbox clean`.\n"
+        "Re-run with: scitex-container sandbox clean [...]",
+        err=True,
+    )
+    ctx.exit(2)
+
+
+@sandbox.command(name="clean")
 @click.option(
     "--keep",
     "-k",
@@ -165,8 +263,28 @@ def sandbox_rollback(containers_dir, use_sudo):
 @click.option(
     "--dir", "-d", "containers_dir", type=click.Path(), help="Containers directory."
 )
-def sandbox_cleanup(keep, containers_dir):
-    """Remove old sandbox directories, keeping the N most recent."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def sandbox_cleanup(keep, containers_dir, dry_run, yes):
+    """Remove old sandbox directories, keeping the N most recent.
+
+    \b
+    Example:
+      $ scitex-container sandbox clean
+      $ scitex-container sandbox clean --keep 3
+      $ scitex-container sandbox clean --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would clean sandboxes in dir={containers_dir or '<cwd>'} "
+            f"keep={keep}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import cleanup_sandboxes
@@ -192,8 +310,29 @@ def sandbox_cleanup(keep, containers_dir):
 )
 @click.option("--pkg", "-p", "package", type=str, help="Update only this package.")
 @click.option("--deps", is_flag=True, help="Install dependencies too (slower).")
-def sandbox_update(sandbox_dir, proj_root, package, deps):
-    """Incrementally update ecosystem packages in the sandbox (fast)."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def sandbox_update(sandbox_dir, proj_root, package, deps, dry_run, yes):
+    """Incrementally update ecosystem packages in the sandbox (fast).
+
+    \b
+    Example:
+      $ scitex-container sandbox update -s ./scitex-sandbox
+      $ scitex-container sandbox update -s ./scitex-sandbox -p scitex-io
+      $ scitex-container sandbox update -s ./scitex-sandbox --deps
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would update sandbox={sandbox_dir} "
+            f"proj_root={proj_root or '<auto>'} package={package or '<all>'} "
+            f"deps={deps}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import sandbox_update as do_update
@@ -236,7 +375,13 @@ def sandbox_update(sandbox_dir, proj_root, package, deps):
 @click.option("--sandbox-dir", "-s", type=click.Path(), help="Sandbox directory path.")
 @click.option("--ps1", default=r"\W $ ", show_default=True, help="PS1 prompt string.")
 def sandbox_configure_ps1(sandbox_dir, ps1):
-    r"""Configure PS1 prompt in a sandbox (default: \\W $ )."""
+    r"""Configure PS1 prompt in a sandbox (default: \\W $ ).
+
+    \b
+    Example:
+      $ scitex-container sandbox configure-ps1 -s ./scitex-sandbox
+      $ scitex-container sandbox configure-ps1 -s ./scitex-sandbox --ps1 "[scitex] $ "
+    """
     from pathlib import Path
 
     from scitex_container.apptainer import sandbox_configure_ps1 as do_configure
@@ -261,8 +406,27 @@ def sandbox_configure_ps1(sandbox_dir, ps1):
     show_default=True,
     help="Number of versioned SIFs to keep.",
 )
-def sandbox_purge_sifs(containers_dir, keep):
-    """Remove SIF files and related artifacts (*.sif, *.sif.old, *.sif.backup.*)."""
+@click.option(
+    "--dry-run", is_flag=True, help="Print the planned action without executing."
+)
+@click.option(
+    "-y", "--yes", is_flag=True, help="Skip interactive confirmation prompts."
+)
+def sandbox_purge_sifs(containers_dir, keep, dry_run, yes):
+    """Remove SIF files and related artifacts (*.sif, *.sif.old, *.sif.backup.*).
+
+    \b
+    Example:
+      $ scitex-container sandbox purge-sifs
+      $ scitex-container sandbox purge-sifs --keep 2
+      $ scitex-container sandbox purge-sifs --dry-run
+    """
+    if dry_run:
+        click.echo(
+            f"[dry-run] would purge SIFs in dir={containers_dir or '<cwd>'} keep={keep}"
+        )
+        return
+    _ = yes
     from pathlib import Path
 
     from scitex_container.apptainer import cleanup_sifs

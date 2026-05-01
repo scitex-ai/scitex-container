@@ -1,6 +1,8 @@
 ---
 skill: scitex-container/environment
 description: Environment variables used by scitex-container
+name: environment
+tags: [scitex-container, scitex-package]
 ---
 
 # Environment Variables

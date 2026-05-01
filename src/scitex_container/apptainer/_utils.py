@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from scitex_config._ecosystem import local_state
 
 from scitex_container._compat import supports_return_as
 
@@ -67,7 +68,7 @@ def find_containers_dir() -> Path:
         return pkg_containers
 
     # 3. User-managed
-    user_containers = Path.home() / ".scitex" / "containers"
+    user_containers = local_state.runtime_path("container", "containers")
     if user_containers.is_dir() and list(user_containers.glob("*.def")):
         return user_containers
 
