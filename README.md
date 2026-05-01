@@ -245,16 +245,14 @@ snapshot = scitex_container.env_snapshot()
 # snapshot includes: container version, SIF hash, lock files, host packages
 ```
 
-The SciTeX ecosystem follows the Four Freedoms for researchers, inspired by [the Free Software Definition](https://www.gnu.org/philosophy/free-sw.en.html):
-
-- **Freedom 0** — Run your research without restriction
-- **Freedom 1** — Study and adapt the tools you depend on
-- **Freedom 2** — Share your work and its infrastructure with colleagues
-- **Freedom 3** — Improve the tools and share improvements with the community
-
----
-
-> AGPL-3.0 — because research infrastructure deserves the same freedoms as the software it runs on.
+>Four Freedoms for Research
+>
+>0. The freedom to **run** your research anywhere — your machine, your terms.
+>1. The freedom to **study** how every step works — from raw data to final manuscript.
+>2. The freedom to **redistribute** your workflows, not just your papers.
+>3. The freedom to **modify** any module and share improvements with the community.
+>
+>AGPL-3.0 — because we believe research infrastructure deserves the same freedoms as the software it runs on.
 
 <p align="center">
   <a href="https://scitex.ai" target="_blank"><img src="docs/scitex-icon-navy-inverted.png" alt="SciTeX" width="40"/></a>
