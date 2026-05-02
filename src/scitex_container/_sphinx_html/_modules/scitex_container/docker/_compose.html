@@ -186,7 +186,7 @@
 
 
 <div class="viewcode-block" id="rebuild">
-<a class="viewcode-back" href="../../../api/scitex_container.html#scitex_container.docker.rebuild">[docs]</a>
+<a class="viewcode-back" href="../../../api/scitex_container.html#scitex_container.rebuild">[docs]</a>
 <span class="nd">@supports_return_as</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">rebuild</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dev&quot;</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Rebuild Docker containers without using the cache.</span>
@@ -216,7 +216,7 @@
 
 
 <div class="viewcode-block" id="restart">
-<a class="viewcode-back" href="../../../api/scitex_container.html#scitex_container.docker.restart">[docs]</a>
+<a class="viewcode-back" href="../../../api/scitex_container.html#scitex_container.restart">[docs]</a>
 <span class="nd">@supports_return_as</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">restart</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dev&quot;</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Restart Docker containers (down then up).</span>
@@ -256,7 +256,7 @@
 
 
 <div class="viewcode-block" id="status">
-<a class="viewcode-back" href="../../../api/scitex_container.html#scitex_container.docker.status">[docs]</a>
+<a class="viewcode-back" href="../../../api/scitex_container.html#scitex_container.status">[docs]</a>
 <span class="nd">@supports_return_as</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dev&quot;</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get Docker container status for the given compose environment.</span>

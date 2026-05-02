@@ -58,7 +58,20 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-scitex_container">scitex_container</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.build"><code class="docutils literal notranslate"><span class="pre">build()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.cleanup"><code class="docutils literal notranslate"><span class="pre">cleanup()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.deploy"><code class="docutils literal notranslate"><span class="pre">deploy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.docker_rebuild"><code class="docutils literal notranslate"><span class="pre">docker_rebuild()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.docker_restart"><code class="docutils literal notranslate"><span class="pre">docker_restart()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scitex_container.env_snapshot"><code class="docutils literal notranslate"><span class="pre">env_snapshot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.host_check"><code class="docutils literal notranslate"><span class="pre">host_check()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.host_install"><code class="docutils literal notranslate"><span class="pre">host_install()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.list_versions"><code class="docutils literal notranslate"><span class="pre">list_versions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.rollback"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.sandbox_create"><code class="docutils literal notranslate"><span class="pre">sandbox_create()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.status"><code class="docutils literal notranslate"><span class="pre">status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.switch"><code class="docutils literal notranslate"><span class="pre">switch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_container.verify"><code class="docutils literal notranslate"><span class="pre">verify()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-scitex_container.apptainer">scitex_container.apptainer</a><ul>
@@ -143,6 +156,129 @@
 <span id="scitex-container"></span><h2>scitex_container<a class="headerlink" href="#module-scitex_container" title="Link to this heading"></a></h2>
 <p>scitex-container: Unified container management for Apptainer and Docker.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.build">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">def_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scitex-cloud-shared-v0.1.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sandbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_build.html#build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.build" title="Link to this definition"></a></dt>
+<dd><p>Build Apptainer/Singularity SIF or sandbox from .def file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>def_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Name of the .def file (without extension).</p></li>
+<li><p><strong>output_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Directory for the output .sif file or sandbox directory.
+Defaults to same dir as .def.</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Force rebuild even if .def is unchanged.</p></li>
+<li><p><strong>sandbox</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If True, build a sandbox directory instead of a SIF image.
+Uses: apptainer build –sandbox –fakeroot output-sandbox/ input.def</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the built .sif file or sandbox directory.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If .def file or container command not found.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If build fails.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.cleanup">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_versioning.html#cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.cleanup" title="Link to this definition"></a></dt>
+<dd><p>Remove old scitex-v*.sif files, keeping the N most recent.</p>
+<p>Never removes the active version (current.sif target) or any
+<code class="docutils literal notranslate"><span class="pre">scitex-base-v*.sif</span></code> base images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>containers_dir</strong> (<em>Path</em>) – Directory containing SIF files.</p></li>
+<li><p><strong>keep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of most-recent versioned SIFs to keep (default: 3).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Paths of removed SIF files.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[Path]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.deploy">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">deploy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('/opt/scitex/singularity')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_versioning.html#deploy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.deploy" title="Link to this definition"></a></dt>
+<dd><p>Copy active SIF and base SIF to target directory.</p>
+<p>Copies the currently active <code class="docutils literal notranslate"><span class="pre">scitex-v*.sif</span></code> and the latest
+<code class="docutils literal notranslate"><span class="pre">scitex-base-v*.sif</span></code> to <em>target_dir</em>, then recreates the
+<code class="docutils literal notranslate"><span class="pre">current.sif</span></code> symlink there. Uses sudo for the copy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_dir</strong> (<em>Path</em>) – Directory containing the built SIF files.</p></li>
+<li><p><strong>target_dir</strong> (<em>Path</em>) – Deployment target directory (default: /opt/scitex/singularity).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If no active version is set or copy fails.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the active SIF or base SIF is missing.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.docker_rebuild">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">docker_rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dev'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scitex_container.docker_rebuild" title="Link to this definition"></a></dt>
+<dd><p>Rebuild Docker containers without using the cache.</p>
+<p>Runs: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-f</span> <span class="pre">&lt;compose_file&gt;</span> <span class="pre">build</span> <span class="pre">--no-cache</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Environment name used to locate the compose file.</p></li>
+<li><p><strong>project_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em> or </em><em>None</em>) – Explicit directory containing the compose file.  When <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+function walks upward from the current working directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Exit code of the docker compose command (0 = success).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.docker_restart">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">docker_restart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dev'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scitex_container.docker_restart" title="Link to this definition"></a></dt>
+<dd><p>Restart Docker containers (down then up).</p>
+<p>Runs: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-f</span> <span class="pre">&lt;compose_file&gt;</span> <span class="pre">down</span></code>
+then: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-f</span> <span class="pre">&lt;compose_file&gt;</span> <span class="pre">up</span> <span class="pre">-d</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Environment name used to locate the compose file.</p></li>
+<li><p><strong>project_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em> or </em><em>None</em>) – Explicit directory containing the compose file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Exit code of the final <code class="docutils literal notranslate"><span class="pre">up</span> <span class="pre">-d</span></code> command (0 = success).
+If <code class="docutils literal notranslate"><span class="pre">down</span></code> fails its exit code is returned instead.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="scitex_container.env_snapshot">
 <span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">env_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_repos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/_snapshot.html#env_snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.env_snapshot" title="Link to this definition"></a></dt>
 <dd><p>Capture a lightweight JSON-serializable environment snapshot.</p>
@@ -160,6 +296,223 @@ be determined.</p>
 <dd class="field-even"><p>JSON-serializable snapshot with keys:
 <code class="docutils literal notranslate"><span class="pre">schema_version</span></code>, <code class="docutils literal notranslate"><span class="pre">timestamp</span></code>, <code class="docutils literal notranslate"><span class="pre">container</span></code>, <code class="docutils literal notranslate"><span class="pre">host</span></code>,
 <code class="docutils literal notranslate"><span class="pre">dev_repos</span></code>, <code class="docutils literal notranslate"><span class="pre">lock_files</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.host_check">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">host_check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scitex_container.host_check" title="Link to this definition"></a></dt>
+<dd><p>Check which host packages are installed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>Structured status per package group:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;texlive&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;installed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;pdfTeX 3.141592653...&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;binaries&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;pdflatex&quot;</span><span class="p">,</span> <span class="s2">&quot;bibtex&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;imagemagick&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;installed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;Version: ImageMagick 6.9...&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;binaries&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;convert&quot;</span><span class="p">,</span> <span class="s2">&quot;identify&quot;</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.host_install">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">host_install</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texlive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imagemagick</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scitex_container.host_install" title="Link to this definition"></a></dt>
+<dd><p>Install host packages by calling the shell script.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texlive</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Install TeXLive packages.</p></li>
+<li><p><strong>imagemagick</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Install ImageMagick.</p></li>
+<li><p><strong>all</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Install all packages (overrides texlive/imagemagick flags).</p></li>
+<li><p><strong>check_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Run the script in –check mode without installing anything.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Status per package group:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;texlive&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;installed&quot;</span><span class="p">,</span> <span class="s2">&quot;returncode&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="s2">&quot;imagemagick&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;skipped&quot;</span><span class="p">,</span> <span class="s2">&quot;returncode&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+    <span class="s2">&quot;script&quot;</span><span class="p">:</span> <span class="s2">&quot;/abs/path/to/install-host-packages.sh&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the install script cannot be found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.list_versions">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">list_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_versioning.html#list_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.list_versions" title="Link to this definition"></a></dt>
+<dd><p>List all versioned SIFs with metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>containers_dir</strong> (<em>Path</em>) – Directory containing SIF files.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Each dict contains keys: version, path, size, date, active.
+Sorted by modification time (newest first).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.rollback">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">rollback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_sudo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_versioning.html#rollback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.rollback" title="Link to this definition"></a></dt>
+<dd><p>Switch to the version before the current one (by modification time).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>containers_dir</strong> (<em>Path</em>) – Directory containing SIF files.</p></li>
+<li><p><strong>use_sudo</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If True, run symlink commands via sudo.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Version string that is now active after rollback.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If there is no current version or no previous version to roll back to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.sandbox_create">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">sandbox_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scitex_container.sandbox_create" title="Link to this definition"></a></dt>
+<dd><p>Build a sandbox directory from a SIF image or .def file.</p>
+<p>Creates a timestamped sandbox (<code class="docutils literal notranslate"><span class="pre">sandbox-YYYYMMDD_HHMMSS/</span></code>) and
+updates the <code class="docutils literal notranslate"><span class="pre">current-sandbox</span></code> symlink to point to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em>) – Path to the source <code class="docutils literal notranslate"><span class="pre">.sif</span></code> file or <code class="docutils literal notranslate"><span class="pre">.def</span></code> file.</p></li>
+<li><p><strong>containers_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Parent directory for sandbox output and symlink.
+Defaults to source file’s parent directory.</p></li>
+<li><p><strong>output_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Explicit output path (overrides timestamped naming).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the created sandbox directory.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the source file does not exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If the build fails.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.status">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_status.html#status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.status" title="Link to this definition"></a></dt>
+<dd><p>List available containers and their status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>containers_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Directory containing .def files. Auto-detected if not given.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of container info dicts with keys:
+name, def_path, sif_path, sif_size, sif_date,
+hash_current, hash_stored, needs_rebuild.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.switch">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">switch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containers_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_sudo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scitex_container.switch" title="Link to this definition"></a></dt>
+<dd><p>Atomically switch current.sif symlink to scitex-v{version}.sif.</p>
+<p>Uses <code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">-sf</span></code> to create a temporary symlink, then <code class="docutils literal notranslate"><span class="pre">mv</span> <span class="pre">-Tf</span></code> for an
+atomic rename on the same filesystem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Target version string (e.g. “2.19.5”).</p></li>
+<li><p><strong>containers_dir</strong> (<em>Path</em>) – Directory containing SIF files.</p></li>
+<li><p><strong>use_sudo</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If True, run ln/mv via sudo (needed for /opt/scitex paths).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If the target SIF does not exist.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If the symlink switch fails.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_container.verify">
+<span class="sig-prename descclassname"><span class="pre">scitex_container.</span></span><span class="sig-name descname"><span class="pre">verify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sif_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">def_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_container/apptainer/_verify.html#verify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_container.verify" title="Link to this definition"></a></dt>
+<dd><p>Verify container integrity.</p>
+<p>Checks:
+1. SIF exists and computes its SHA256
+2. If def_path given, compares .def hash against stored .def-hash
+3. If lock files exist, runs pip freeze / dpkg-query inside the SIF</p>
+<blockquote>
+<div><p>and compares against stored lock files</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sif_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em>) – Path to the .sif file to verify.</p></li>
+<li><p><strong>def_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Path to the .def file that should have produced this SIF.</p></li>
+<li><p><strong>lock_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Directory containing lock files (requirements-lock.txt, dpkg-lock.txt).
+Defaults to same directory as the SIF.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Verification results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;sif&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="s2">&quot;sha256&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">&quot;def_origin&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;pass|fail|skip&quot;</span><span class="p">,</span> <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;pip_lock&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;pass|fail|skip&quot;</span><span class="p">,</span> <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="s2">&quot;diff_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="s2">&quot;dpkg_lock&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;pass|fail|skip&quot;</span><span class="p">,</span> <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="s2">&quot;diff_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="s2">&quot;overall&quot;</span><span class="p">:</span> <span class="s2">&quot;pass|fail&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
