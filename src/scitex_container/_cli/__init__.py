@@ -50,8 +50,14 @@ def _print_help_recursive(ctx, group, prefix="scitex-container"):
                 click.echo(cmd.get_help(sub_ctx))
 
 
-@click.group(invoke_without_command=True)
+@click.group(
+    invoke_without_command=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 @click.version_option(
+    None,
+    "-V",
+    "--version",
     package_name="scitex-container",
     prog_name="scitex-container",
     message="%(prog)s %(version)s",

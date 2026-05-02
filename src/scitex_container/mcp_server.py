@@ -30,7 +30,7 @@ scitex-container: Container management for Apptainer/Singularity and Docker.
 
 ### Apptainer container operations
 - container_build     — Build a SIF or sandbox from a .def file
-- container_list      — List versioned SIFs with active marker
+- container_list_versions — List versioned SIFs with active marker
 - container_switch    — Switch active container version
 - container_rollback  — Roll back to the previous version
 - container_deploy    — Copy active SIF to production target
@@ -87,7 +87,7 @@ if FASTMCP_AVAILABLE and mcp is not None:
         return await build_handler(name=name, sandbox=sandbox, force=force, base=base)
 
     @mcp.tool()
-    async def container_list(containers_dir: str = "") -> dict:
+    async def container_list_versions(containers_dir: str = "") -> dict:
         """Enumerate every versioned SIF in the containers directory with size, build date, and a marker for the currently-active symlink target. Drop-in replacement for hand-rolled `ls -la /opt/scitex/containers/*.sif` + `readlink active.sif`. Use when the user asks "which containers do I have?", "list SIF versions", "what's active?", or is choosing a version to switch to.
 
         Args:

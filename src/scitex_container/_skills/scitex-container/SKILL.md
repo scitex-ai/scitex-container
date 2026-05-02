@@ -43,7 +43,10 @@ rule and empirical verification table.
 
 ### Core
 - [01_quick-start.md](01_quick-start.md) — Basic usage
-- [02_python-api.md](02_python-api.md) — Python API reference
+- [02_python-api.md](02_python-api.md) — Python API: apptainer module (build/freeze/verify/status, SIF versioning, utilities)
+- [03_python-api-sandbox.md](03_python-api-sandbox.md) — Python API: sandbox management & versioning
+- [04_python-api-builders.md](04_python-api-builders.md) — Python API: SLURM / exec command builders
+- [05_python-api-docker-host.md](05_python-api-docker-host.md) — Python API: docker, host, top-level `env_snapshot`
 
 ### Workflows
 - [10_cli-reference.md](10_cli-reference.md) — CLI commands
