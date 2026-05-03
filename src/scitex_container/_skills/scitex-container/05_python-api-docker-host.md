@@ -1,8 +1,8 @@
 ---
-skill: scitex-container/python-api-docker-host
-description: Python API reference for scitex-container — docker module, host module, top-level env_snapshot
-name: python-api-docker-host
-tags: [scitex-container, scitex-package]
+description: |
+  [TOPIC] Python API Reference — docker, host, top-level
+  [DETAILS] Python API reference for scitex-container — docker module, host module, top-level env_snapshot.
+tags: [scitex-container-python-api-docker-host]
 ---
 
 # Python API Reference — docker, host, top-level

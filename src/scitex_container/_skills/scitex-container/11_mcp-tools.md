@@ -1,8 +1,8 @@
 ---
-skill: scitex-container/mcp-tools
-description: MCP tools for AI agents using scitex-container
-name: mcp-tools
-tags: [scitex-container, scitex-package]
+description: |
+  [TOPIC] MCP Tools (for AI agents)
+  [DETAILS] MCP tools for AI agents using scitex-container.
+tags: [scitex-container-mcp-tools]
 ---
 
 # MCP Tools (for AI agents)

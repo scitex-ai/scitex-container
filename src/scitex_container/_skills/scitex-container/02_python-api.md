@@ -1,8 +1,8 @@
 ---
-skill: scitex-container/python-api
-description: Python API reference for scitex-container — apptainer module (build/freeze/verify/status, SIF versioning, utilities)
-name: python-api
-tags: [scitex-container, scitex-package]
+description: |
+  [TOPIC] Python API Reference — apptainer module
+  [DETAILS] Python API reference for scitex-container — apptainer module (build/freeze/verify/status, SIF versioning, utilities).
+tags: [scitex-container-python-api]
 ---
 
 # Python API Reference — apptainer module

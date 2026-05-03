@@ -1,8 +1,8 @@
 ---
-skill: scitex-container/cli-reference
-description: CLI commands reference for scitex-container
-name: cli-reference
-tags: [scitex-container, scitex-package]
+description: |
+  [TOPIC] CLI Reference
+  [DETAILS] CLI commands reference for scitex-container.
+tags: [scitex-container-cli-reference]
 ---
 
 # CLI Reference

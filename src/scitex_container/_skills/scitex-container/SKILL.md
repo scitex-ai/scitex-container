@@ -1,5 +1,10 @@
 ---
-description: Unified container management for Apptainer/Singularity + Docker — 14 MCP tools for the reproducible-science lifecycle. `container_*` (build SIF from .def, list, switch active container, rollback to prior version, deploy, cleanup old images, status, verify SHA256 + .def origin + lock file, env_snapshot for lock/freeze), `sandbox_create` (writable Apptainer sandbox), `docker_rebuild` / `docker_restart` (dev/prod compose envs), `host_install` / `host_check` (install Apptainer/Docker on the host, probe versions). Python API — submodules `apptainer`, `docker`, `host` + `env_snapshot()` (pip freeze + conda list + apt + system info captured into a reproducible lock). Drop-in replacement for hand-rolled `apptainer build/exec` shell loops, manual `docker compose up -d --build` scripts, `pip freeze > requirements.txt` + `conda env export` + `dpkg -l` combined-by-hand provenance, and ad-hoc SIF versioning. Use whenever the user asks to "build an Apptainer SIF", "rebuild Docker containers", "snapshot my environment", "rollback to a previous container", "check host container setup", "verify SIF integrity", "install Apptainer on this machine", "create a writable sandbox", "freeze my dependencies with system state", "deploy a container for SLURM/HPC", or mentions SIF, Apptainer, Singularity, Docker compose, Dockerfile, .def file, lock file, env_snapshot, reproducible environment.
+name: scitex-container
+description: |
+  [WHAT] Unified container management for Apptainer/Singularity + Docker — 14 MCP tools for the reproducible-science lifecycle.
+  [WHEN] Use whenever the user asks to "build an Apptainer SIF", "rebuild Docker containers", "snapshot my environment", "rollback to a previous container", "check host container setup", "verify SIF integrity", "install Apptainer on this machine", "create a writable sandbox", "freeze my dependencies with system state", "deploy a container for SLURM/HPC", or mentions SIF, Apptainer, Singularity, Docker compose, Dockerfile, .
+  [HOW] `pip install scitex-container` then `import scitex_container`; see leaf skills for details.
+tags: [scitex-container]
 allowed-tools: mcp__scitex__container_*, mcp__scitex__sandbox_*, mcp__scitex__docker_*, mcp__scitex__host_*
 primary_interface: cli
 interfaces:
@@ -7,10 +12,7 @@ interfaces:
   cli: 3
   mcp: 2
   skills: 2
-  hook: 0
   http: 0
-name: scitex-container
-tags: [scitex-container, scitex-package]
 ---
 
 # scitex-container Skills Index

@@ -1,8 +1,8 @@
 ---
-skill: scitex-container/python-api-sandbox
-description: Python API reference for scitex-container — apptainer sandbox management & versioning
-name: python-api-sandbox
-tags: [scitex-container, scitex-package]
+description: |
+  [TOPIC] Python API Reference — sandbox
+  [DETAILS] Python API reference for scitex-container — apptainer sandbox management & versioning.
+tags: [scitex-container-python-api-sandbox]
 ---
 
 # Python API Reference — sandbox

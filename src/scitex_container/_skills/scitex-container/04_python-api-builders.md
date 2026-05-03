@@ -1,8 +1,8 @@
 ---
-skill: scitex-container/python-api-builders
-description: Python API reference for scitex-container — apptainer SLURM / exec command builders
-name: python-api-builders
-tags: [scitex-container, scitex-package]
+description: |
+  [TOPIC] Python API Reference — command builders
+  [DETAILS] Python API reference for scitex-container — apptainer SLURM / exec command builders.
+tags: [scitex-container-python-api-builders]
 ---
 
 # Python API Reference — command builders
