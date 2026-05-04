@@ -2,7 +2,7 @@
 description: |
   [TOPIC] CLI Reference
   [DETAILS] CLI commands reference for scitex-container.
-tags: [scitex-container-cli-reference]
+tags: [scitex-container-cli-reference-detailed]
 ---
 
 # CLI Reference
