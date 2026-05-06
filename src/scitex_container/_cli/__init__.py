@@ -255,6 +255,15 @@ def list_python_apis(ctx, verbose: int, as_json: bool):
         click.echo()
 
 
+# §1a: install-shell-completion + print-shell-completion (canonical leaves)
+try:
+    from scitex_dev._cli._completion import attach_shell_completion
+
+    attach_shell_completion(main, prog_name="scitex-container")
+except ImportError:
+    pass
+
+
 __all__ = ["main"]
 
 # EOF
