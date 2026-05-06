@@ -332,4 +332,55 @@ def start(transport: str, host: str, port: int, dry_run: bool, yes: bool):
         mcp_server.run(transport=transport, host=host, port=port)
 
 
+@mcp.command("install")
+@click.option("--claude-code", is_flag=True, help="Show Claude Code config snippet.")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON.")
+def install(claude_code: bool, as_json: bool):
+    """Show MCP installation instructions.
+
+    \b
+    Example:
+      $ scitex-container mcp install
+      $ scitex-container mcp install --claude-code
+    """
+    config = {
+        "mcpServers": {
+            "scitex-container": {
+                "command": "scitex-container",
+                "args": ["mcp", "start"],
+            }
+        }
+    }
+    if as_json:
+        import json as _json
+
+        click.echo(
+            _json.dumps(
+                {
+                    "install_command": "pip install scitex-container[mcp]",
+                    "config": config,
+                    "verify_commands": ["scitex-container mcp doctor"],
+                },
+                indent=2,
+            )
+        )
+        return
+
+    if claude_code:
+        click.secho("Add to Claude Code MCP config:", fg="cyan")
+        click.echo()
+        click.echo('  "scitex-container": {')
+        click.echo('    "command": "scitex-container",')
+        click.echo('    "args": ["mcp", "start"]')
+        click.echo("  }")
+        return
+
+    click.secho("scitex-container MCP Server Installation", fg="cyan", bold=True)
+    click.echo("=" * 40)
+    click.echo()
+    click.echo("1. Install: pip install scitex-container[mcp]")
+    click.echo("2. Config:  scitex-container mcp install --claude-code")
+    click.echo("3. Test:    scitex-container mcp doctor")
+
+
 # EOF
