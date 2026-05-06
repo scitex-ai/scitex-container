@@ -338,7 +338,6 @@ def start(transport: str, host: str, port: int, dry_run: bool, yes: bool):
 @click.option("--dry-run", is_flag=True, help="Accepted for §2; this verb is informational, never mutates state.")
 @click.option("--yes", "-y", is_flag=True, help="Accepted for §2; this verb is informational, never mutates state.")
 def install(claude_code: bool, as_json: bool, dry_run, yes):
-    del dry_run, yes  # audit §2 — no-op flags
     """Show MCP installation instructions.
 
     \b
@@ -346,6 +345,7 @@ def install(claude_code: bool, as_json: bool, dry_run, yes):
       $ scitex-container mcp install
       $ scitex-container mcp install --claude-code
     """
+    del dry_run, yes  # audit §2 — no-op flags
     config = {
         "mcpServers": {
             "scitex-container": {
