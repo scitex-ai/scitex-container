@@ -267,3 +267,14 @@ except ImportError:
 __all__ = ["main"]
 
 # EOF
+
+
+# audit §4 — inject version into root --help
+try:
+    from importlib.metadata import version as _v
+    main.help = (
+        f"scitex-container (v{_v('scitex-container')}) — "
+        + (main.help or "").lstrip()
+    )
+except Exception:
+    pass
