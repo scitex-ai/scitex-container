@@ -34,6 +34,25 @@
 | 2 | **Rollback requires docker tags + manual surgery** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
 | 3 | **Paper "env" is `pip freeze`** -- useless without the python version, OS libs, CUDA driver | **`env_snapshot()`** -- full reproducibility capsule: container tag + pip freeze + conda env + apt packages + git commits, serialized as a single file for manuscript attachments |
 
+## Architecture
+
+```
+scitex-container/
+├── src/scitex_container/
+│   ├── __init__.py              # apptainer, docker, host, env_snapshot
+│   ├── apptainer/
+│   │   ├── _build.py            # build SIF from def file (pinned hash)
+│   │   ├── _versions.py         # list / switch / rollback (atomic symlink)
+│   │   ├── _verify.py           # SIF + lock-file integrity
+│   │   └── _exec.py             # build_exec_args for cloud terminal
+│   ├── docker/                  # rebuild / restart compose services
+│   ├── host/                    # TeX Live, ImageMagick, bind mounts
+│   ├── _snapshot.py             # env_snapshot(): pip + conda + apt + git
+│   ├── _cli/                    # scitex-container entrypoint
+│   └── _mcp_tools/              # MCP server (opt-in)
+└── tests/
+```
+
 ## Installation
 
 Requires Python >= 3.10.
@@ -234,6 +253,23 @@ scitex-dev skills export --package scitex-container  # Export to Claude Code
 | `environment` | Environment variables |
 
 </details>
+
+## Demo
+
+```mermaid
+sequenceDiagram
+    participant U as user
+    participant SC as scitex-container
+    participant FS as /opt/containers
+    U->>SC: build --def-name scitex-final
+    SC->>FS: scitex-final-2.19.6.sif (pinned)
+    U->>SC: switch 2.19.5
+    SC->>FS: active.sif -> scitex-final-2.19.5.sif
+    U->>SC: rollback
+    SC->>FS: active.sif -> scitex-final-2.19.6.sif
+    U->>SC: env-snapshot
+    SC-->>U: snapshot.json (SIF hash + pip + conda + apt + git)
+```
 
 ## Part of SciTeX
 
