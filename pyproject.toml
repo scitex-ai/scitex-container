@@ -17,7 +17,7 @@ keywords = ["scitex", "apptainer", "singularity", "docker", "container", "sandbo
 dependencies = [
     "click",
     "packaging",
-    "scitex-dev>=0.2.0",
+    "scitex-dev>=0.11.5",
     "scitex-config>=0.3.0",
 ]
 
