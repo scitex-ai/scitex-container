@@ -9,7 +9,7 @@
 <p align="center"><b>Unified container management for Apptainer/Singularity and Docker — versioned SIFs, atomic switch/rollback, and reproducible env snapshots.</b></p>
 
 <p align="center">
-  <a href="https://scitex-container.readthedocs.io/">Full Documentation</a> · <code>pip install scitex-container</code>
+  <a href="https://scitex-container.readthedocs.io/">Full Documentation</a> · <code>uv pip install scitex-container[all]</code>
 </p>
 
 <!-- scitex-badges:start -->
