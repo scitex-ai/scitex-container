@@ -26,9 +26,11 @@ mcp = [
     "fastmcp>=2.0.0",
 ]
 dev = [
-    "fastmcp>=2.0.0",
+    "fastmcp>=2.0.0",                # tests/integration/test_skills_quality.py + mcp tool surface
     "pytest-cov>=4.0.0",
     "pytest>=7.0.0",
+    "pytest-timeout>=2.0.0",         # .github/workflows/test.yml uses --timeout=120
+    "scitex-dev[cli-audit]>=0.11.7", # tests/develop/test_audit.py needs the `scitex-dev` CLI
 ]
 docs = [
     "sphinx>=7.0",
@@ -68,7 +70,9 @@ addopts = "-v --tb=short"
 library_dirs = ["src", "tests", "examples"]
 
 [tool.coverage.run]
+parallel = true
 source = ["scitex_container"]
+concurrency = ["multiprocessing", "thread"]
 
 [tool.coverage.report]
 show_missing = true

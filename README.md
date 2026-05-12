@@ -17,7 +17,6 @@
   <a href="https://pypi.org/project/scitex-container/"><img src="https://img.shields.io/pypi/v/scitex-container.svg" alt="PyPI"></a>
   <a href="https://pypi.org/project/scitex-container/"><img src="https://img.shields.io/pypi/pyversions/scitex-container.svg" alt="Python"></a>
   <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml"><img src="https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
-  <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml"><img src="https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml/badge.svg" alt="Install Test"></a>
   <a href="https://codecov.io/gh/ywatanabe1989/scitex-container"><img src="https://codecov.io/gh/ywatanabe1989/scitex-container/graph/badge.svg" alt="Coverage"></a>
   <a href="https://scitex-container.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/scitex-container/badge/?version=latest" alt="Docs"></a>
   <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/license-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>

@@ -10,13 +10,10 @@ Usage:
 
 from __future__ import annotations
 
-try:
-    from fastmcp import FastMCP
+from scitex_dev import try_import_optional
 
-    FASTMCP_AVAILABLE = True
-except ImportError:
-    FASTMCP_AVAILABLE = False
-    FastMCP = None  # type: ignore
+FastMCP = try_import_optional("fastmcp", "FastMCP", extra="mcp", pkg="scitex-container")
+FASTMCP_AVAILABLE = FastMCP is not None
 
 __all__ = ["mcp", "main", "FASTMCP_AVAILABLE"]
 
