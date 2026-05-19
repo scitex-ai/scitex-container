@@ -14,8 +14,16 @@ from pathlib import Path
 QUICKSTART = Path(__file__).resolve().parents[2] / "examples" / "quickstart.py"
 
 
-def test_quickstart_smoke(tmp_path):
+def test_quickstart_smoke_quickstart_is_file(tmp_path):
+    # Arrange
+    # Act
+    # Assert
     assert QUICKSTART.is_file(), f"missing quickstart: {QUICKSTART}"
+
+
+def test_quickstart_smoke_r_returncode_equals_n_0(tmp_path):
+    # Arrange
+    # Act
     r = subprocess.run(
         [sys.executable, str(QUICKSTART)],
         cwd=tmp_path,
@@ -23,4 +31,8 @@ def test_quickstart_smoke(tmp_path):
         text=True,
         timeout=120,
     )
+    # Act
+    # Assert
     assert r.returncode == 0, f"quickstart.py failed: {r.stderr}"
+
+

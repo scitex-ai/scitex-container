@@ -42,13 +42,19 @@ _HANDLER_NAMES = [
 
 
 @pytest.mark.parametrize("name", _HANDLER_NAMES)
-def test_handler_exists(name):
+def test_handler_exists_hasattr_handlers_name(name):
+    # Arrange
+    # Act
+    # Assert
     assert hasattr(handlers, name), f"handlers module missing {name!r}"
 
 
 @pytest.mark.parametrize("name", _HANDLER_NAMES)
 def test_handler_is_coroutine_function(name):
+    # Arrange
+    # Act
     fn = getattr(handlers, name)
+    # Assert
     assert inspect.iscoroutinefunction(fn), (
         f"{name} must be `async def` (MCP requires coroutine handlers)"
     )
@@ -64,77 +70,207 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-def test_list_handler_returns_envelope():
-    """list_handler with no args; should return {"success": bool, ...}."""
+def test_list_handler_returns_envelope_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.list_handler())
+    # Act
+    # Assert
     assert isinstance(result, dict)
+
+
+def test_list_handler_returns_envelope_success_in_result():
+    # Arrange
+    # Act
+    result = _run(handlers.list_handler())
+    # Act
+    # Assert
     assert "success" in result
 
 
-def test_list_handler_handles_missing_dir():
-    """Bogus containers_dir → returns envelope with success=True and empty
-    versions list (graceful degrade — no SIFs to list is not an error)."""
+
+
+def test_list_handler_handles_missing_dir_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.list_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert isinstance(result, dict)
+
+
+def test_list_handler_handles_missing_dir_result_get_success_is_true():
+    # Arrange
+    # Act
+    result = _run(handlers.list_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert result.get("success") is True
+
+
+def test_list_handler_handles_missing_dir_result_get_versions():
+    # Arrange
+    # Act
+    result = _run(handlers.list_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert result.get("versions") == []
 
 
-def test_status_handler_returns_envelope():
+
+
+def test_status_handler_returns_envelope_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.status_handler())
+    # Act
+    # Assert
     assert isinstance(result, dict)
-    # status_handler aggregates many subsystems — at minimum return a dict
+
+
+def test_status_handler_returns_envelope_result():
+    # Arrange
+    # Act
+    result = _run(handlers.status_handler())
+    # Act
+    # Assert
     assert result  # non-empty
 
 
+
+
 def test_host_check_handler_returns_envelope():
+    # Arrange
+    # Act
     result = _run(handlers.host_check_handler())
+    # Assert
     assert isinstance(result, dict)
 
 
 def test_env_snapshot_handler_returns_envelope():
     """env_snapshot is designed never to raise."""
+    # Arrange
+    # Act
     result = _run(handlers.env_snapshot_handler())
+    # Assert
     assert isinstance(result, dict)
 
 
-def test_rollback_handler_handles_missing_dir():
+def test_rollback_handler_handles_missing_dir_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.rollback_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert isinstance(result, dict)
+
+
+def test_rollback_handler_handles_missing_dir_result_get_success_is_false():
+    # Arrange
+    # Act
+    result = _run(handlers.rollback_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert result.get("success") is False
 
 
-def test_switch_handler_handles_missing_dir():
+
+
+def test_switch_handler_handles_missing_dir_result_is_dict():
+    # Arrange
+    # Act
     result = _run(
         handlers.switch_handler(
             version="9.9.9", containers_dir="/__nonexistent__/__here__"
         )
     )
+    # Act
+    # Assert
     assert isinstance(result, dict)
+
+
+def test_switch_handler_handles_missing_dir_result_get_success_is_false():
+    # Arrange
+    # Act
+    result = _run(
+        handlers.switch_handler(
+            version="9.9.9", containers_dir="/__nonexistent__/__here__"
+        )
+    )
+    # Act
+    # Assert
     assert result.get("success") is False
 
 
-def test_cleanup_handler_handles_missing_dir():
-    """Empty/missing dir → success=True with removed=[]; nothing to clean is
-    not an error condition."""
+
+
+def test_cleanup_handler_handles_missing_dir_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.cleanup_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert isinstance(result, dict)
+
+
+def test_cleanup_handler_handles_missing_dir_result_get_success_is_true():
+    # Arrange
+    # Act
+    result = _run(handlers.cleanup_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert result.get("success") is True
+
+
+def test_cleanup_handler_handles_missing_dir_result_get_removed():
+    # Arrange
+    # Act
+    result = _run(handlers.cleanup_handler(containers_dir="/__nonexistent__/__here__"))
+    # Act
+    # Assert
     assert result.get("removed") == []
 
 
-def test_build_handler_handles_missing_def():
-    """No .def files → success=False with error key, never raises."""
+
+
+def test_build_handler_handles_missing_def_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.build_handler(name="__nonexistent_def_name__"))
+    # Act
+    # Assert
     assert isinstance(result, dict)
+
+
+def test_build_handler_handles_missing_def_result_get_success_is_false():
+    # Arrange
+    # Act
+    result = _run(handlers.build_handler(name="__nonexistent_def_name__"))
+    # Act
+    # Assert
     assert result.get("success") is False
 
 
-def test_sandbox_create_handler_handles_missing_sif():
+
+
+def test_sandbox_create_handler_handles_missing_sif_result_is_dict():
+    # Arrange
+    # Act
     result = _run(handlers.sandbox_create_handler(source_sif="/__nonexistent__.sif"))
+    # Act
+    # Assert
     assert isinstance(result, dict)
-    # sandbox_create may degrade with success=False or raise — accept dict envelope
+
+
+def test_sandbox_create_handler_handles_missing_sif_success_in_result_or_error_in_result():
+    # Arrange
+    # Act
+    result = _run(handlers.sandbox_create_handler(source_sif="/__nonexistent__.sif"))
+    # Act
+    # Assert
     assert "success" in result or "error" in result
+
+
 
 
 # EOF
