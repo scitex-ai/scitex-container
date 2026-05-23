@@ -1,24 +1,21 @@
 #!/usr/bin/env python3
-# Timestamp: "2026-05-01"
+# Timestamp: "2026-05-23"
 # File: tests/scitex_container/apptainer/test__utils.py
-"""Unit tests for scitex_container.apptainer._utils.
+"""Tests for scitex_container.apptainer._utils.
 
-Both detect_container_cmd() and find_containers_dir() are tested.
-Tests are written so they pass whether or not apptainer/singularity is
-installed on the test host, by patching shutil.which when needed.
+detect_container_cmd() and find_containers_dir() are exercised against
+real collaborators only — no mocks. PATH is steered with real executable
+shims in a tmp bin dir; the user-fallback search dir is steered with the
+SCITEX_DIR environment variable (honoured by local_state.runtime_path).
 """
 
 from __future__ import annotations
 
+import os
+import stat
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
-
-
-# ---------------------------------------------------------------------------
-# Import helpers
-# ---------------------------------------------------------------------------
 
 
 def _utils():
@@ -26,6 +23,49 @@ def _utils():
     from scitex_container.apptainer import _utils as u
 
     return u
+
+
+def _make_exe(bin_dir: Path, name: str) -> Path:
+    """Create a real executable shim named ``name`` in ``bin_dir``."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    exe = bin_dir / name
+    exe.write_text("#!/usr/bin/env bash\nexit 0\n")
+    exe.chmod(exe.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return exe
+
+
+@pytest.fixture
+def isolated_path(tmp_path):
+    """Yield a tmp bin dir that is the *only* entry on PATH.
+
+    Tests add real executable shims to it so detect_container_cmd()
+    resolves them via shutil.which deterministically, regardless of what
+    the host actually has installed.
+    """
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    saved = os.environ.get("PATH", "")
+    os.environ["PATH"] = str(bin_dir)
+    try:
+        yield bin_dir
+    finally:
+        os.environ["PATH"] = saved
+
+
+@pytest.fixture
+def scitex_dir(tmp_path):
+    """Point SCITEX_DIR at a tmp dir so the user-fallback search is isolated."""
+    user_root = tmp_path / "scitex-home"
+    user_root.mkdir()
+    saved = os.environ.get("SCITEX_DIR")
+    os.environ["SCITEX_DIR"] = str(user_root)
+    try:
+        yield user_root
+    finally:
+        if saved is None:
+            os.environ.pop("SCITEX_DIR", None)
+        else:
+            os.environ["SCITEX_DIR"] = saved
 
 
 # ---------------------------------------------------------------------------
@@ -36,101 +76,57 @@ def _utils():
 class TestDetectContainerCmd:
     """Tests for detect_container_cmd."""
 
-    def test_returns_string_calls_utils(self):
+    def test_returns_apptainer_when_only_apptainer_on_path(self, isolated_path):
         # Arrange
+        _make_exe(isolated_path, "apptainer")
         # Act
-        # Assert
-        utils = _utils()
-        try:
-            result = utils.detect_container_cmd()
-            assert isinstance(result, str)
-        except FileNotFoundError:
-            pass  # acceptable when neither tool is installed
-
-    def test_returns_apptainer_when_apptainer_available(self):
-        """When apptainer is on PATH, it should be preferred."""
-        # Arrange
-        utils = _utils()
-        # Act
-        with patch(
-            "shutil.which", side_effect=lambda cmd: cmd if cmd == "apptainer" else None
-        ):
-            result = utils.detect_container_cmd()
+        result = _utils().detect_container_cmd()
         # Assert
         assert result == "apptainer"
 
-    def test_returns_singularity_when_only_singularity_available(self):
+    def test_returns_singularity_when_only_singularity_on_path(self, isolated_path):
         # Arrange
-        utils = _utils()
+        _make_exe(isolated_path, "singularity")
         # Act
-        with patch(
-            "shutil.which",
-            side_effect=lambda cmd: cmd if cmd == "singularity" else None,
-        ):
-            result = utils.detect_container_cmd()
+        result = _utils().detect_container_cmd()
         # Assert
         assert result == "singularity"
 
-    def test_raises_file_not_found_when_neither_available(self):
+    def test_prefers_apptainer_when_both_on_path(self, isolated_path):
         # Arrange
+        _make_exe(isolated_path, "apptainer")
+        _make_exe(isolated_path, "singularity")
         # Act
-        # Assert
-        utils = _utils()
-        with patch("shutil.which", return_value=None):
-            with pytest.raises(FileNotFoundError):
-                utils.detect_container_cmd()
-
-    def test_error_message_mentions_apptainer(self):
-        # Arrange
-        utils = _utils()
-        with patch("shutil.which", return_value=None):
-            try:
-                utils.detect_container_cmd()
-                msg = ""
-            except FileNotFoundError as exc:
-                msg = str(exc).lower()
-        # Act
-        contains_apptainer = "apptainer" in msg
-        # Assert
-        assert contains_apptainer
-
-    def test_error_message_mentions_singularity(self):
-        # Arrange
-        utils = _utils()
-        with patch("shutil.which", return_value=None):
-            try:
-                utils.detect_container_cmd()
-                msg = ""
-            except FileNotFoundError as exc:
-                msg = str(exc).lower()
-        # Act
-        contains_singularity = "singularity" in msg
-        # Assert
-        assert contains_singularity
-
-    def test_apptainer_preferred_over_singularity(self):
-        """When both are present, apptainer should win (checked first)."""
-        # Arrange
-        utils = _utils()
-        # Act
-        with patch("shutil.which", return_value="found"):  # both return truthy
-            result = utils.detect_container_cmd()
+        result = _utils().detect_container_cmd()
         # Assert
         assert result == "apptainer"
 
-    def test_returned_value_is_apptainer_or_singularity(self):
+    def test_raises_file_not_found_when_neither_on_path(self, isolated_path):
         # Arrange
-        utils = _utils()
+        # (isolated_path is empty — no shims created)
         # Act
-        with patch(
-            "shutil.which",
-            side_effect=lambda cmd: cmd
-            if cmd in ("apptainer", "singularity")
-            else None,
-        ):
-            result = utils.detect_container_cmd()
+        ctx = pytest.raises(FileNotFoundError)
         # Assert
-        assert result in ("apptainer", "singularity")
+        with ctx:
+            _utils().detect_container_cmd()
+
+    def test_error_message_mentions_apptainer_when_neither_on_path(self, isolated_path):
+        # Arrange
+        ctx = pytest.raises(FileNotFoundError, match="apptainer")
+        # Act
+        # Assert
+        with ctx:
+            _utils().detect_container_cmd()
+
+    def test_error_message_mentions_singularity_when_neither_on_path(
+        self, isolated_path
+    ):
+        # Arrange
+        ctx = pytest.raises(FileNotFoundError, match="singularity")
+        # Act
+        # Assert
+        with ctx:
+            _utils().detect_container_cmd()
 
 
 # ---------------------------------------------------------------------------
@@ -141,150 +137,91 @@ class TestDetectContainerCmd:
 class TestFindContainersDir:
     """Tests for find_containers_dir."""
 
-    def test_returns_path_when_cwd_containers_has_def(self, tmp_path, monkeypatch):
-        """If ./containers/ exists with a .def file, it should be returned."""
+    def test_returns_cwd_containers_when_it_has_def_file(self, tmp_path, scitex_dir):
         # Arrange
         containers = tmp_path / "containers"
         containers.mkdir()
         (containers / "scitex.def").write_text(
             "Bootstrap: docker\nFrom: ubuntu:22.04\n"
         )
-
-        monkeypatch.chdir(tmp_path)
-
-        utils = _utils()
+        os.chdir(tmp_path)
         # Act
-        result = utils.find_containers_dir()
+        result = _utils().find_containers_dir()
         # Assert
         assert result == containers
 
-    def test_returned_path_is_path_object(self, tmp_path, monkeypatch):
+    def test_returned_value_is_path_instance(self, tmp_path, scitex_dir):
         # Arrange
         containers = tmp_path / "containers"
         containers.mkdir()
         (containers / "base.def").write_text("Bootstrap: library\n")
-
-        monkeypatch.chdir(tmp_path)
-
-        utils = _utils()
+        os.chdir(tmp_path)
         # Act
-        result = utils.find_containers_dir()
+        result = _utils().find_containers_dir()
         # Assert
         assert isinstance(result, Path)
 
-    def test_raises_when_no_containers_dir_found(self, tmp_path, monkeypatch):
-        """When no candidates exist, FileNotFoundError must be raised."""
+    def test_raises_when_no_containers_dir_found(self, tmp_path, scitex_dir):
         # Arrange
+        os.chdir(tmp_path)
+        ctx = pytest.raises(FileNotFoundError, match="containers")
         # Act
         # Assert
-        monkeypatch.chdir(tmp_path)
+        with ctx:
+            _utils().find_containers_dir()
 
-        # Ensure ~/.scitex/containers does not match by using a fake home
-        fake_home = tmp_path / "fakehome"
-        fake_home.mkdir()
-
-        utils = _utils()
-        with patch("pathlib.Path.home", return_value=fake_home):
-            with pytest.raises(FileNotFoundError):
-                utils.find_containers_dir()
-
-    def test_error_message_lists_searched_paths(self, tmp_path, monkeypatch):
-        """Error message should describe what was searched."""
+    def test_cwd_containers_without_def_file_is_skipped(self, tmp_path, scitex_dir):
         # Arrange
-        monkeypatch.chdir(tmp_path)
-
-        fake_home = tmp_path / "fakehome"
-        fake_home.mkdir()
-
-        utils = _utils()
-        msg = ""
-        with patch("pathlib.Path.home", return_value=fake_home):
-            try:
-                utils.find_containers_dir()
-            except FileNotFoundError as exc:
-                msg = str(exc).lower()
-        # Act
-        contains_containers = "containers" in msg
-        # Assert
-        assert contains_containers
-
-    def test_cwd_containers_dir_without_def_files_is_skipped(
-        self, tmp_path, monkeypatch
-    ):
-        """An empty containers/ dir (no .def) should not be selected."""
-        # Arrange
-        # Act
-        # Assert
         containers = tmp_path / "containers"
         containers.mkdir()
-        # No .def files — only a random file
         (containers / "README.txt").write_text("hello")
+        os.chdir(tmp_path)
+        ctx = pytest.raises(FileNotFoundError)
+        # Act
+        # Assert
+        with ctx:
+            _utils().find_containers_dir()
 
-        monkeypatch.chdir(tmp_path)
-
-        fake_home = tmp_path / "fakehome"
-        fake_home.mkdir()
-
-        utils = _utils()
-        with patch("pathlib.Path.home", return_value=fake_home):
-            with pytest.raises(FileNotFoundError):
-                utils.find_containers_dir()
-
-    def test_user_home_containers_fallback(self, tmp_path, monkeypatch):
-        """~/.scitex/container/runtime/containers/ with .def files is a valid fallback."""
-        # Use a temp dir as home to avoid touching the real ~/.scitex
+    def test_user_fallback_dir_with_def_file_is_returned(self, tmp_path, scitex_dir):
         # Arrange
-        fake_home = tmp_path / "fakehome"
-        user_containers = fake_home / ".scitex" / "container" / "runtime" / "containers"
+        from scitex_config._ecosystem import local_state
+
+        user_containers = local_state.runtime_path("container", "containers")
         user_containers.mkdir(parents=True)
         (user_containers / "myenv.def").write_text("Bootstrap: docker\n")
-
-        # Make cwd a directory with no containers/ subdir
-        cwd = tmp_path / "workdir"
-        cwd.mkdir()
-        monkeypatch.chdir(cwd)
-
-        utils = _utils()
+        workdir = tmp_path / "workdir"
+        workdir.mkdir()
+        os.chdir(workdir)
         # Act
-        with patch("pathlib.Path.home", return_value=fake_home):
-            result = utils.find_containers_dir()
-
+        result = _utils().find_containers_dir()
         # Assert
         assert result == user_containers
 
-    def test_def_file_required_not_just_any_file(self, tmp_path, monkeypatch):
-        """containers/ with only non-.def files should not match."""
+    def test_containers_dir_with_only_non_def_files_is_skipped(
+        self, tmp_path, scitex_dir
+    ):
         # Arrange
-        # Act
-        # Assert
         containers = tmp_path / "containers"
         containers.mkdir()
         (containers / "config.yaml").write_text("key: value\n")
-        (containers / "notes.txt").write_text("some notes\n")
+        os.chdir(tmp_path)
+        ctx = pytest.raises(FileNotFoundError)
+        # Act
+        # Assert
+        with ctx:
+            _utils().find_containers_dir()
 
-        monkeypatch.chdir(tmp_path)
-
-        fake_home = tmp_path / "fakehome"
-        fake_home.mkdir()
-
-        utils = _utils()
-        with patch("pathlib.Path.home", return_value=fake_home):
-            with pytest.raises(FileNotFoundError):
-                utils.find_containers_dir()
-
-    def test_multiple_def_files_still_returns_dir(self, tmp_path, monkeypatch):
-        """Multiple .def files in containers/ is fine — dir should be returned."""
+    def test_multiple_def_files_still_returns_cwd_containers(
+        self, tmp_path, scitex_dir
+    ):
         # Arrange
         containers = tmp_path / "containers"
         containers.mkdir()
         (containers / "scitex-base.def").write_text("Bootstrap: docker\n")
         (containers / "scitex-final.def").write_text("Bootstrap: localimage\n")
-
-        monkeypatch.chdir(tmp_path)
-
-        utils = _utils()
+        os.chdir(tmp_path)
         # Act
-        result = utils.find_containers_dir()
+        result = _utils().find_containers_dir()
         # Assert
         assert result == containers
 
