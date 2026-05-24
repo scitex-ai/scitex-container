@@ -70,11 +70,9 @@ def build_host_mount_binds(
     texlive_prefix : str
         Host prefix for TeX Live installation (e.g. ``/usr``). When set,
         auto-generates bind entries for TeX Live share directories and binaries.
-        Example: ``/usr`` generates:
-          ``--bind /usr/share/texlive:/usr/share/texlive:ro``
-          ``--bind /usr/share/texmf-dist:/usr/share/texmf-dist:ro``
-          ``--bind /usr/bin/pdflatex:/usr/bin/pdflatex:ro``
-          ... (all _TEXLIVE_BINS)
+        Example: ``/usr`` generates ``--bind`` entries for
+        ``/usr/share/texlive``, ``/usr/share/texmf-dist``,
+        ``/usr/bin/pdflatex`` (and all ``_TEXLIVE_BINS``), each ``:ro``.
 
     Returns
     -------
@@ -121,6 +119,7 @@ def build_exec_args(
     """Build the ``apptainer exec`` argument list.
 
     Handles:
+
     - Sandbox vs SIF detection. Both use ``--writable-tmpfs`` for user
       sessions so each user gets a clean per-session tmpfs overlay.
     - For SIF images, ``--containall`` is added to prevent host mounts
@@ -231,6 +230,7 @@ def build_instance_start_script(
     """Build a bash script that starts an apptainer instance and keeps it alive.
 
     This script is designed to be submitted via ``sbatch``. It:
+
     1. Starts an apptainer instance with ``--writable-tmpfs`` (shared overlay).
     2. Prints ``INSTANCE_READY`` on success or ``INSTANCE_FAILED`` on failure.
     3. Sleeps in a loop while the instance is alive (sbatch keeps the

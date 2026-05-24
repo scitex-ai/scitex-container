@@ -1,24 +1,30 @@
 # SciTeX Container
 
-<!-- scitex-badges:start -->
-[![PyPI](https://img.shields.io/pypi/v/scitex-container.svg)](https://pypi.org/project/scitex-container/)
-[![Python](https://img.shields.io/pypi/pyversions/scitex-container.svg)](https://pypi.org/project/scitex-container/)
-[![Tests](https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-container/actions/workflows/test.yml)
-[![Install Test](https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-container/actions/workflows/install-test.yml)
-[![Coverage](https://codecov.io/gh/ywatanabe1989/scitex-container/graph/badge.svg)](https://codecov.io/gh/ywatanabe1989/scitex-container)
-[![Docs](https://readthedocs.org/projects/scitex-container/badge/?version=latest)](https://scitex-container.readthedocs.io/en/latest/)
-[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-<!-- scitex-badges:end -->
-
 <p align="center">
   <a href="https://scitex.ai">
     <img src="docs/scitex-logo-blue-cropped.png" alt="SciTeX" width="400">
   </a>
 </p>
 
+<p align="center"><b>Unified container management for Apptainer/Singularity and Docker — versioned SIFs, atomic switch/rollback, and reproducible env snapshots.</b></p>
+
 <p align="center">
-  <a href="https://scitex-container.readthedocs.io/">Full Documentation</a> · <code>pip install scitex-container</code>
+  <a href="https://scitex-container.readthedocs.io/">Full Documentation</a> · <code>uv pip install scitex-container[all]</code>
 </p>
+
+<!-- scitex-badges:start -->
+<p align="center">
+  <a href="https://pypi.org/project/scitex-container/"><img src="https://img.shields.io/pypi/v/scitex-container?label=pypi" alt="pypi"></a>
+  <a href="https://pypi.org/project/scitex-container/"><img src="https://img.shields.io/pypi/pyversions/scitex-container?label=python" alt="python"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/rtd-sphinx-build-on-ubuntu-latest.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-container/rtd-sphinx-build-on-ubuntu-latest.yml?branch=develop&label=docs" alt="docs"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/pytest-matrix-on-ubuntu-py3-11-3-12-3-13.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-container/pytest-matrix-on-ubuntu-py3-11-3-12-3-13.yml?branch=develop&label=tests" alt="tests"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/import-smoke-on-ubuntu-py3-12.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-container/import-smoke-on-ubuntu-py3-12.yml?branch=develop&label=install-check" alt="install-check"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/newb-docs-quality-on-ubuntu-latest.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-container/newb-docs-quality-on-ubuntu-latest.yml?branch=develop&label=quality" alt="quality"></a>
+  <a href="https://codecov.io/gh/ywatanabe1989/scitex-container"><img src="https://img.shields.io/codecov/c/github/ywatanabe1989/scitex-container/develop?label=cov" alt="cov"></a>
+</p>
+<!-- scitex-badges:end -->
 
 ---
 
@@ -29,6 +35,25 @@
 | 1 | **"Reproducible" containers drift** -- `Dockerfile` builds a different image each time because `apt-get install python3` floats | **Versioned SIF** -- `scitex-container build` pins the image content hash; `switch-version 2.19.5` is an atomic symlink flip |
 | 2 | **Rollback requires docker tags + manual surgery** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
 | 3 | **Paper "env" is `pip freeze`** -- useless without the python version, OS libs, CUDA driver | **`env_snapshot()`** -- full reproducibility capsule: container tag + pip freeze + conda env + apt packages + git commits, serialized as a single file for manuscript attachments |
+
+## Architecture
+
+```
+scitex-container/
+├── src/scitex_container/
+│   ├── __init__.py              # apptainer, docker, host, env_snapshot
+│   ├── apptainer/
+│   │   ├── _build.py            # build SIF from def file (pinned hash)
+│   │   ├── _versions.py         # list / switch / rollback (atomic symlink)
+│   │   ├── _verify.py           # SIF + lock-file integrity
+│   │   └── _exec.py             # build_exec_args for cloud terminal
+│   ├── docker/                  # rebuild / restart compose services
+│   ├── host/                    # TeX Live, ImageMagick, bind mounts
+│   ├── _snapshot.py             # env_snapshot(): pip + conda + apt + git
+│   ├── _cli/                    # scitex-container entrypoint
+│   └── _mcp_tools/              # MCP server (opt-in)
+└── tests/
+```
 
 ## Installation
 
@@ -70,7 +95,7 @@ scitex-container --help-recursive
 
 ## Four Interfaces
 
-<details>
+<details open>
 <summary><strong>Python API</strong></summary>
 
 <br>
@@ -231,6 +256,23 @@ scitex-dev skills export --package scitex-container  # Export to Claude Code
 
 </details>
 
+## Demo
+
+```mermaid
+sequenceDiagram
+    participant U as user
+    participant SC as scitex-container
+    participant FS as /opt/containers
+    U->>SC: build --def-name scitex-final
+    SC->>FS: scitex-final-2.19.6.sif (pinned)
+    U->>SC: switch 2.19.5
+    SC->>FS: active.sif -> scitex-final-2.19.5.sif
+    U->>SC: rollback
+    SC->>FS: active.sif -> scitex-final-2.19.6.sif
+    U->>SC: env-snapshot
+    SC-->>U: snapshot.json (SIF hash + pip + conda + apt + git)
+```
+
 ## Part of SciTeX
 
 `scitex-container` is part of [**SciTeX**](https://scitex.ai). Install via
@@ -245,16 +287,14 @@ snapshot = scitex_container.env_snapshot()
 # snapshot includes: container version, SIF hash, lock files, host packages
 ```
 
-The SciTeX ecosystem follows the Four Freedoms for researchers, inspired by [the Free Software Definition](https://www.gnu.org/philosophy/free-sw.en.html):
-
-- **Freedom 0** — Run your research without restriction
-- **Freedom 1** — Study and adapt the tools you depend on
-- **Freedom 2** — Share your work and its infrastructure with colleagues
-- **Freedom 3** — Improve the tools and share improvements with the community
-
----
-
-> AGPL-3.0 — because research infrastructure deserves the same freedoms as the software it runs on.
+>Four Freedoms for Research
+>
+>0. The freedom to **run** your research anywhere — your machine, your terms.
+>1. The freedom to **study** how every step works — from raw data to final manuscript.
+>2. The freedom to **redistribute** your workflows, not just your papers.
+>3. The freedom to **modify** any module and share improvements with the community.
+>
+>AGPL-3.0 — because we believe research infrastructure deserves the same freedoms as the software it runs on.
 
 <p align="center">
   <a href="https://scitex.ai" target="_blank"><img src="docs/scitex-icon-navy-inverted.png" alt="SciTeX" width="40"/></a>

@@ -62,7 +62,9 @@ html_context = {
 # -- Options for intersphinx -------------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "click": ("https://click.palletsprojects.com/en/8.x/", None),
+    # /en/8.x/ 302-redirects and its objects.inv 404s under intersphinx,
+    # failing PR-mode `sphinx-build -W`. /en/stable/ is the live inventory.
+    "click": ("https://click.palletsprojects.com/en/stable/", None),
 }
 
 # -- Options for autodoc -----------------------------------------------------

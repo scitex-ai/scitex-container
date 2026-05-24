@@ -13,7 +13,33 @@ from ._command_builder import (
     build_shell_in_allocation_command,
     build_srun_command,
 )
+from ._config import ImageConfig, load_config
 from ._freeze import freeze
+from ._lockgen import (
+    Lock,
+    LockDiff,
+    capture_lock,
+    compare_locks,
+    generate_locked_def,
+    read_lock,
+    write_lock,
+)
+from ._reproducible import (
+    RoundTripResult,
+    VerifyError,
+    VerifyStatus,
+    build_reproducible,
+    check_verified,
+    verify_roundtrip,
+)
+from ._store import (
+    list_builds,
+    mark_unverified,
+    mark_verified,
+    point_latest,
+    protect,
+    prune,
+)
 from ._sandbox import configure_ps1 as sandbox_configure_ps1
 from ._sandbox import create as sandbox_create
 from ._sandbox import is_sandbox
@@ -79,4 +105,29 @@ __all__ = [
     # utils
     "detect_container_cmd",
     "find_containers_dir",
+    # reproducible round-trip
+    "build_reproducible",
+    "verify_roundtrip",
+    "check_verified",
+    "RoundTripResult",
+    "VerifyStatus",
+    "VerifyError",
+    # reproducible config
+    "ImageConfig",
+    "load_config",
+    # lock capture / def-gen / compare
+    "Lock",
+    "LockDiff",
+    "capture_lock",
+    "write_lock",
+    "read_lock",
+    "generate_locked_def",
+    "compare_locks",
+    # artifact store
+    "list_builds",
+    "point_latest",
+    "prune",
+    "protect",
+    "mark_verified",
+    "mark_unverified",
 ]

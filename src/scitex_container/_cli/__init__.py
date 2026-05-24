@@ -50,8 +50,14 @@ def _print_help_recursive(ctx, group, prefix="scitex-container"):
                 click.echo(cmd.get_help(sub_ctx))
 
 
-@click.group(invoke_without_command=True)
+@click.group(
+    invoke_without_command=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 @click.version_option(
+    None,
+    "-V",
+    "--version",
     package_name="scitex-container",
     prog_name="scitex-container",
     message="%(prog)s %(version)s",
@@ -249,6 +255,32 @@ def list_python_apis(ctx, verbose: int, as_json: bool):
         click.echo()
 
 
+# §1a: install-shell-completion + print-shell-completion (canonical leaves)
+try:
+    from scitex_dev._cli._completion import attach_shell_completion
+
+    attach_shell_completion(main, prog_name="scitex-container")
+except ImportError:
+    pass
+
+
 __all__ = ["main"]
 
 # EOF
+
+
+# audit §4 — inject version into root --help
+try:
+    from importlib.metadata import version as _v
+    main.help = (
+        f"scitex-container (v{_v('scitex-container')}) — "
+        + (main.help or "").lstrip()
+    )
+except Exception:
+    pass
+
+# audit-cli §1a — packages with _skills/ MUST expose
+# `<cli> skills {list,get,install}`.
+from ._skills import skills_group as _skills_group
+
+main.add_command(_skills_group, name="skills")
