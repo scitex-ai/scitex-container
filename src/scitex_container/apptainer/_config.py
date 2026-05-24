@@ -39,19 +39,13 @@ DEFAULT_REQUIRE_VERIFIED = False
 
 @dataclass(frozen=True)
 class ImageConfig:
-    """Resolved reproducible-image config.
+    """Resolved reproducible-image config."""
 
-    Attributes
-    ----------
-    retain : int
-        Keep the last N ``(sif, lock)`` pairs per layer; older builds are
-        pruned (a build dir carrying a ``.keep`` marker is never pruned).
-    require_verified : bool
-        When True, the use-time check errors (instead of warning) on an
-        ``.unverified`` image.
-    """
-
+    # Keep the last N (sif, lock) pairs per layer; older builds are pruned
+    # (a build dir carrying a .keep marker is never pruned).
     retain: int = DEFAULT_RETAIN
+    # When True, the use-time check errors (instead of warning) on an
+    # .unverified image.
     require_verified: bool = DEFAULT_REQUIRE_VERIFIED
 
 
