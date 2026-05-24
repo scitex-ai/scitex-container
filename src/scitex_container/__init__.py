@@ -15,14 +15,18 @@ from ._snapshot import env_snapshot
 # ---------------------------------------------------------------------------
 from .apptainer import (
     build,
+    build_reproducible,
+    check_verified,
     cleanup,
     deploy,
+    list_builds,
     list_versions,
     rollback,
     sandbox_create,
     status,
     switch_version as switch,
     verify,
+    verify_roundtrip,
 )
 from .docker import (
     rebuild as docker_rebuild,
@@ -64,4 +68,9 @@ __all__ = [
     "docker_restart",
     "host_check",
     "host_install",
+    # reproducible round-trip
+    "build_reproducible",
+    "verify_roundtrip",
+    "check_verified",
+    "list_builds",
 ]

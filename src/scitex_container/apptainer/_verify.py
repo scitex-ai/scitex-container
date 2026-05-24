@@ -38,6 +38,7 @@ def verify(
     """Verify container integrity.
 
     Checks:
+
     1. SIF exists and computes its SHA256
     2. If def_path given, compares .def hash against stored .def-hash
     3. If lock files exist, runs pip freeze / dpkg-query inside the SIF

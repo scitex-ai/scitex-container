@@ -17,6 +17,7 @@ keywords = ["scitex", "apptainer", "singularity", "docker", "container", "sandbo
 dependencies = [
     "click",
     "packaging",
+    "pyyaml",                # reproducible-build config at <root>/config.yaml
     "scitex-dev>=0.11.7",
     "scitex-config>=0.3.0",
 ]
