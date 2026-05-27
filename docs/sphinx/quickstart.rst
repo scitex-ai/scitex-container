@@ -51,22 +51,33 @@ Python API Quickstart
 
 .. code-block:: python
 
-   import scitex_container as sc
+   import scitex_container as ctr
 
    # Apptainer operations
-   sc.apptainer.build(def_name="scitex-final", sandbox=True)
-   sc.apptainer.switch_version("2.19.5", containers_dir="/opt/containers")
-   versions = sc.apptainer.list_versions(containers_dir="/opt/containers")
-   status = sc.apptainer.status()
+   ctr.apptainer.build(def_name="scitex-final", sandbox=True)
+   ctr.apptainer.switch_version("2.19.5", containers_dir="/opt/containers")
+   versions = ctr.apptainer.list_versions(containers_dir="/opt/containers")
+   status = ctr.apptainer.status()
+
+   # Reproducible build round-trip
+   result = ctr.apptainer.build_reproducible(
+       layer="sac-base",
+       root="/opt/containers",
+       def_name="apptainer-base",
+   )
+   print(f"Verified: {result.verified}")
+
+   # Use-time verify gate
+   ctr.apptainer.check_verified("/opt/containers/sac-base.sif")
 
    # Host operations
-   sc.host.check_packages()
+   ctr.host.check_packages()
 
    # Docker operations
-   sc.docker.rebuild(env="prod")
+   ctr.docker.rebuild(env="prod")
 
    # Environment snapshot
-   snapshot = sc.env_snapshot()
+   snapshot = ctr.env_snapshot()
 
 MCP Server Quickstart
 ---------------------

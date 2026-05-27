@@ -33,28 +33,33 @@ same names. They dispatch to the appropriate submodule.
 | Name                | Dispatches to                                       |
 |---------------------|-----------------------------------------------------|
 | `build()`           | `apptainer.build`                                   |
+| `build_reproducible()` | `apptainer.build_reproducible`                  |
 | `cleanup()`         | `apptainer.cleanup`                                 |
 | `deploy()`          | `apptainer.deploy`                                  |
 | `list_versions()`   | `apptainer.list_versions`                           |
 | `rollback()`        | `apptainer.rollback`                                |
 | `status()`          | `apptainer.status`                                  |
-| `switch()`          | `apptainer.switch`                                  |
+| `switch()`          | `apptainer.switch_version`                          |
 | `verify()`          | `apptainer.verify`                                  |
+| `verify_roundtrip()`| `apptainer.verify_roundtrip`                        |
+| `check_verified()`  | `apptainer.check_verified`                          |
+| `list_builds()`     | `apptainer.list_builds`                             |
 | `sandbox_create()`  | `apptainer.sandbox_create`                          |
 | `docker_rebuild()`  | `docker.rebuild`                                    |
 | `docker_restart()`  | `docker.restart`                                    |
-| `host_check()`      | `host.check`                                        |
-| `host_install()`    | `host.install`                                      |
+| `host_check()`      | `host.check_packages`                               |
+| `host_install()`    | `host.install_packages`                             |
 
 ## Example
 
 ```python
 import scitex_container as ctr
 
-ctr.host_check()                                  # detect runtimes
-ctr.build("env.def", "env.sif")                   # build SIF
-ctr.verify("env.sif", "env.lock.yaml")            # integrity check
-ctr.env_snapshot("./snapshots/today.yaml")        # capture host state
+ctr.host_check()                                            # detect runtimes
+ctr.build(def_name="scitex-final", sandbox=False)            # build SIF
+ctr.verify(sif_path="/opt/containers/scitex-final.sif")     # integrity check
+snap = ctr.env_snapshot()                                   # capture host state
+print(snap)
 ```
 
 ## Detailed per-area references

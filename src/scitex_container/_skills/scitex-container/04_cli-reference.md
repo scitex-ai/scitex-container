@@ -34,14 +34,17 @@ CLI flags  →  ./config.yaml  →  $SCITEX_CONTAINER_CONFIG
 
 | Command             | Purpose                                                  |
 |---------------------|----------------------------------------------------------|
-| `apptainer`         | Apptainer (SIF) container operations — build / freeze / verify / status / version / rollback / deploy |
-| `docker`            | Manage Docker Compose services — rebuild / restart / status |
-| `host`              | Host-side packages + mount configuration — check / install |
-| `sandbox`           | Manage Apptainer sandbox directories                     |
-| `save-env-snapshot` | Capture environment snapshot for reproducibility (YAML)  |
+| `apptainer`         | Apptainer (SIF) container operations — build / freeze / verify / status / version / rollback / deploy / clean |
+| `docker`            | Manage Docker Compose services — rebuild / restart |
+| `host`              | Host-side packages + mount configuration — check / install / show-mounts |
+| `sandbox`           | Manage Apptainer sandbox directories — create / maintain / list / switch / rollback / clean / update / configure-ps1 / purge-sifs |
+| `save-env-snapshot` | Capture environment snapshot for reproducibility (JSON)  |
 | `show-status`       | Unified status dashboard (Apptainer + host + Docker)     |
-| `mcp`               | MCP (Model Context Protocol) server management           |
-| `list-python-apis`  | List public Python APIs                                  |
+| `mcp`               | MCP (Model Context Protocol) server management — start / doctor / list-tools / install |
+| `skills`            | Agent-facing skills — list / get / install               |
+| `list-python-apis`  | List public Python APIs (apptainer, docker, host)        |
+| `install-shell-completion` | Wire up `<TAB>` completion in the user's shell rc  |
+| `print-shell-completion`   | Print the click-generated completion script to stdout |
 
 ## Companion entry point
 
@@ -55,14 +58,18 @@ CLI flags  →  ./config.yaml  →  $SCITEX_CONTAINER_CONFIG
 
 ```bash
 # Apptainer lifecycle
-scitex-container apptainer build env.def env.sif
-scitex-container apptainer freeze env.sif env.lock.yaml
-scitex-container apptainer verify env.sif env.lock.yaml
-scitex-container apptainer status env.sif
+scitex-container apptainer build scitex-final
+scitex-container apptainer freeze /opt/containers/scitex-v0.2.0.sif
+scitex-container apptainer list
+scitex-container apptainer switch 2.19.5
+scitex-container apptainer rollback
+scitex-container apptainer deploy
+scitex-container apptainer verify /opt/containers/scitex-final.sif
 
 # Sandbox
-scitex-container sandbox create ./mysandbox env.sif
-scitex-container sandbox shell ./mysandbox
+scitex-container sandbox create --source scitex-final.sif
+scitex-container sandbox maintain -s scitex-sandbox/ -- apt-get update
+scitex-container sandbox list -d ./containers
 
 # Docker (workstation)
 scitex-container docker rebuild
@@ -70,11 +77,12 @@ scitex-container docker restart
 
 # Host setup + status
 scitex-container host check
-scitex-container host install --runtime apptainer
+scitex-container host install
+scitex-container host show-mounts
 scitex-container show-status
 
 # Reproducibility snapshot
-scitex-container save-env-snapshot ./snapshots/today.yaml
+scitex-container save-env-snapshot
 ```
 
 ## See also
