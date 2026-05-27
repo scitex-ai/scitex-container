@@ -20,7 +20,7 @@ Requires: `pip install "scitex-container[mcp]"` (fastmcp >= 2.0.0)
 
 | Tool | Purpose |
 |------|---------|
-| `container_build` | Build SIF or sandbox from .def file (`name`, `sandbox`, `force`, `base`) |
+| `container_build` | Build SIF or sandbox from .def file (`name`, `sandbox`, `force`) |
 | `container_list_versions` | List versioned SIFs with active marker |
 | `container_switch` | Switch active SIF version |
 | `container_rollback` | Roll back to previous SIF version |
@@ -29,6 +29,8 @@ Requires: `pip install "scitex-container[mcp]"` (fastmcp >= 2.0.0)
 | `container_verify` | Verify SIF SHA256, .def origin, and lock file consistency |
 | `container_status` | Unified dashboard: Apptainer + host packages + Docker |
 | `container_env_snapshot` | Capture environment snapshot (container + host + git) |
+| `container_skills_get` | Get content of a bundled skill file by name |
+| `container_skills_list` | List bundled skill files |
 
 ### Sandbox
 

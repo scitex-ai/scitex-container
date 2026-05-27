@@ -41,17 +41,42 @@
 ```
 scitex-container/
 ├── src/scitex_container/
-│   ├── __init__.py              # apptainer, docker, host, env_snapshot
+│   ├── __init__.py              # apptainer, docker, host, env_snapshot + MCP-parity re-exports
 │   ├── apptainer/
-│   │   ├── _build.py            # build SIF from def file (pinned hash)
-│   │   ├── _versions.py         # list / switch / rollback (atomic symlink)
-│   │   ├── _verify.py           # SIF + lock-file integrity
-│   │   └── _exec.py             # build_exec_args for cloud terminal
+│   │   ├── _build.py            # build SIF / sandbox from .def (pinned hash)
+│   │   ├── _config.py           # reproducible-build config (retain, require_verified)
+│   │   ├── _freeze.py           # extract pip/dpkg/npm lock files from built SIF
+│   │   ├── _lockgen.py          # lock capture, locked-def generation, version-set comparison
+│   │   ├── _reproducible.py     # self-verifying reproducible-build round-trip + use-time verify gate
+│   │   ├── _store.py            # timestamped (sif, lock) artifact store
+│   │   ├── _versioning.py       # list / switch / rollback / deploy SIF versions
+│   │   ├── _sandbox.py          # sandbox create / maintain / update / to-sif
+│   │   ├── _sandbox_versioning.py # sandbox list / switch / rollback / cleanup
+│   │   ├── _status.py           # list available containers and build status
+│   │   ├── _utils.py            # shared utilities (detect container cmd, find containers dir)
+│   │   └── _verify.py           # SIF + lock-file integrity
 │   ├── docker/                  # rebuild / restart compose services
+│   │   ├── _compose.py          # compose helpers
+│   │   └── _mounts.py           # bind mount helpers
 │   ├── host/                    # TeX Live, ImageMagick, bind mounts
-│   ├── _snapshot.py             # env_snapshot(): pip + conda + apt + git
-│   ├── _cli/                    # scitex-container entrypoint
-│   └── _mcp_tools/              # MCP server (opt-in)
+│   │   ├── _mounts.py           # mount configuration
+│   │   └── _packages.py         # install / check host packages
+│   ├── _snapshot.py             # env_snapshot(): container + host + git + lock files
+│   ├── _mcp/                    # MCP handler implementations
+│   │   └── handlers.py          # async handlers: build, list, switch, rollback, deploy, etc.
+│   ├── _cli/                    # scitex-container CLI entrypoint
+│   │   ├── __init__.py          # main click group with all subcommands
+│   │   ├── _apptainer.py        # apptainer sub-commands (build, freeze, list, switch, etc.)
+│   │   ├── _docker.py           # docker sub-commands (rebuild, restart)
+│   │   ├── _host.py             # host sub-commands (install, check, show-mounts)
+│   │   ├── _sandbox.py          # sandbox sub-commands (create, maintain, list, switch, etc.)
+│   │   ├── _status.py           # show-status dashboard
+│   │   ├── _env_snapshot.py     # save-env-snapshot command
+│   │   ├── _mcp.py              # mcp sub-commands (start, doctor, list-tools, install)
+│   │   └── _skills.py           # skills list / get / install
+│   ├── _compat.py               # compatibility shim for optional scitex-dev dependency
+│   ├── mcp_server.py            # MCP server (optional, via fastmcp)
+│   └── _skills/scitex-container/# bundled agent skill files
 └── tests/
 ```
 
@@ -79,15 +104,15 @@ pip install scitex-container[all]
 
 ```bash
 # Unified status dashboard
-scitex-container status
+scitex-container show-status
 
 # Build Apptainer SIF from definition file
-scitex-container build --def-name scitex-final
+scitex-container apptainer build scitex-final
 
 # Version management
-scitex-container list
-scitex-container switch 2.19.5
-scitex-container rollback
+scitex-container apptainer list
+scitex-container apptainer switch 2.19.5
+scitex-container apptainer rollback
 
 # Show all commands
 scitex-container --help-recursive
@@ -101,27 +126,39 @@ scitex-container --help-recursive
 <br>
 
 ```python
-import scitex_container
+import scitex_container as ctr
 
 # Apptainer container management
-scitex_container.apptainer.build(def_name="scitex-final", sandbox=True)
-scitex_container.apptainer.list_versions(containers_dir="/opt/containers")
-scitex_container.apptainer.switch_version("2.19.5", containers_dir="/opt/containers")
-scitex_container.apptainer.rollback(containers_dir="/opt/containers")
+ctr.apptainer.build(def_name="scitex-final", sandbox=True)
+ctr.apptainer.list_versions(containers_dir="/opt/containers")
+ctr.apptainer.switch_version("2.19.5", containers_dir="/opt/containers")
+ctr.apptainer.rollback(containers_dir="/opt/containers")
+
+# Reproducible build round-trip (rough build + freeze + lock + verify)
+result = ctr.apptainer.build_reproducible(
+    layer="sac-base",
+    root="/opt/containers",
+    def_path="recipes/apptainer-base.def",
+)
+print(f"Verified: {result.verified}")
+
+# Use-time verify gate
+status = ctr.apptainer.check_verified("/opt/containers/sac-base.sif")
+print(f"State: {status.state}")
 
 # Host package management
-scitex_container.host.check_packages()
+ctr.host.check_packages()
 
 # Docker operations
-scitex_container.docker.rebuild(env="prod")
-scitex_container.docker.restart(env="prod")
+ctr.docker.rebuild(env="prod")
+ctr.docker.restart(env="prod")
 
 # Environment reproducibility snapshot
-snapshot = scitex_container.env_snapshot()
+snapshot = ctr.env_snapshot()
 ```
 
 <details>
-<summary><strong>Verification API</strong></summary>
+<summary><strong>Reproducible Build API</strong></summary>
 
 <br>
 
@@ -130,17 +167,25 @@ from pathlib import Path
 import scitex_container
 
 # Verify container integrity
-result = scitex_container.apptainer.verify(sif_path="/opt/containers/scitex-final.sif")
+result = scitex_container.apptainer.verify(
+    sif_path="/opt/containers/scitex-final.sif"
+)
 # Returns: {sif, def_origin, pip_lock, dpkg_lock, overall}
 
-# Command builder for scitex-cloud terminal integration
-args = scitex_container.apptainer.build_exec_args(
-    container_path="/opt/containers/scitex-final.sif",
-    username="user01",
-    host_user_dir=Path("/data/users/user01"),
-    host_project_dir=Path("/data/projects/proj01"),
-    project_slug="proj01",
-    texlive_prefix="/usr",
+# Full reproducible round-trip
+rt_result = scitex_container.apptainer.build_reproducible(
+    layer="sac-base",
+    root="/opt/containers",
+    def_name="apptainer-base",
+    verify=True,
+    keep=False,
+)
+# rt_result.verified is True/None; rt_result.diff shows any drift
+
+# Use-time gate
+status = scitex_container.apptainer.check_verified(
+    "/opt/containers/sac-base.sif",
+    require_verified=True,
 )
 ```
 
@@ -154,13 +199,16 @@ args = scitex_container.apptainer.build_exec_args(
 <br>
 
 ```bash
-scitex-container status                 # Unified dashboard
-scitex-container build scitex-final     # Build SIF
-scitex-container list                   # List versions
-scitex-container switch 2.19.5         # Switch version
-scitex-container rollback              # Revert to previous
-scitex-container verify                # Verify SIF integrity
-scitex-container env-snapshot          # Reproducibility snapshot
+scitex-container show-status              # Unified dashboard
+scitex-container apptainer build           # Build SIF from .def
+scitex-container apptainer freeze          # Extract pip/dpkg/npm lock files
+scitex-container apptainer list            # List versioned SIFs
+scitex-container apptainer switch VERSION  # Switch active SIF version
+scitex-container apptainer rollback        # Revert to previous version
+scitex-container apptainer deploy          # Copy active SIF to production
+scitex-container apptainer clean           # Remove old versions
+scitex-container apptainer verify          # Verify SIF integrity
+scitex-container save-env-snapshot         # Reproducibility snapshot
 ```
 
 <details>
@@ -169,8 +217,13 @@ scitex-container env-snapshot          # Reproducibility snapshot
 <br>
 
 ```bash
-scitex-container sandbox create --sif scitex-final.sif
-scitex-container sandbox maintain --sandbox scitex-sandbox/
+scitex-container sandbox create --source scitex-final.sif
+scitex-container sandbox maintain -s scitex-sandbox/ -- apt-get update
+scitex-container sandbox list -d ./containers
+scitex-container sandbox switch 20260301_120000
+scitex-container sandbox rollback
+scitex-container sandbox clean --keep 3
+scitex-container sandbox update -s scitex-sandbox/
 ```
 
 </details>
@@ -183,7 +236,7 @@ scitex-container sandbox maintain --sandbox scitex-sandbox/
 ```bash
 scitex-container host install          # Install TeX Live + ImageMagick
 scitex-container host check            # Verify host packages
-scitex-container host mounts           # Show configured bind mounts
+scitex-container host show-mounts      # Show configured bind mounts
 ```
 
 </details>
@@ -220,16 +273,22 @@ scitex-container mcp list-tools -vv
 
 | Tool | Description |
 |------|-------------|
-| `status` | Unified container/host status dashboard |
-| `build` | Build SIF from definition file |
-| `list` | List available container versions |
-| `switch` | Switch active container version |
-| `rollback` | Roll back to previous version |
-| `sandbox_create` | Create writable sandbox from SIF |
-| `docker_rebuild` | Rebuild Docker Compose services |
-| `host_install` | Install host-side packages |
-| `env_snapshot` | Capture reproducibility snapshot |
-| `verify` | Verify SIF integrity against lock files |
+| `container_build` | Build SIF or sandbox from .def file |
+| `container_list_versions` | List versioned SIFs with active marker |
+| `container_switch` | Switch active SIF version |
+| `container_rollback` | Roll back to previous SIF version |
+| `container_deploy` | Copy active SIF to production target dir |
+| `container_cleanup` | Remove old SIF versions (keep N most recent) |
+| `container_verify` | Verify SIF SHA256, .def origin, and lock files |
+| `container_status` | Unified dashboard: Apptainer + host + Docker |
+| `container_env_snapshot` | Capture environment snapshot |
+| `container_skills_get` | Get content of a bundled skill file |
+| `container_skills_list` | List bundled skill files |
+| `sandbox_create` | Convert SIF to writable timestamped sandbox |
+| `docker_rebuild` | Rebuild Docker images without cache |
+| `docker_restart` | Restart Docker containers |
+| `host_install` | Install TeXLive / ImageMagick on the host |
+| `host_check` | Check which host packages are installed |
 
 </details>
 
@@ -248,11 +307,12 @@ scitex-dev skills export --package scitex-container  # Export to Claude Code
 
 | Skill | Content |
 |-------|---------|
-| `quick-start` | Install and first-use examples |
-| `python-api` | Full Python API with signatures |
-| `cli-reference` | CLI commands reference |
-| `mcp-tools` | MCP tools for AI agents |
-| `environment` | Environment variables |
+| `01_installation` | pip install + runtime deps + smoke verify |
+| `02_quick-start` | Build a SIF + snapshot environment |
+| `03_python-api` | Top-level Python surface (re-exports + submodules) |
+| `04_cli-reference` | Full `scitex-container` subcommand surface |
+| `11_mcp-tools` | MCP tools for AI agents |
+| `20_environment` | Environment variables |
 
 </details>
 
@@ -263,14 +323,14 @@ sequenceDiagram
     participant U as user
     participant SC as scitex-container
     participant FS as /opt/containers
-    U->>SC: build --def-name scitex-final
-    SC->>FS: scitex-final-2.19.6.sif (pinned)
-    U->>SC: switch 2.19.5
-    SC->>FS: active.sif -> scitex-final-2.19.5.sif
-    U->>SC: rollback
-    SC->>FS: active.sif -> scitex-final-2.19.6.sif
-    U->>SC: env-snapshot
-    SC-->>U: snapshot.json (SIF hash + pip + conda + apt + git)
+    U->>SC: apptainer build --def-name scitex-final
+    SC->>FS: scitex-final.sif (pinned)
+    U->>SC: apptainer switch 2.19.5
+    SC->>FS: current.sif -> scitex-final-2.19.5.sif
+    U->>SC: apptainer rollback
+    SC->>FS: current.sif -> scitex-final-2.19.6.sif
+    U->>SC: save-env-snapshot
+    SC-->>U: snapshot.json (SIF hash + pip + dpkg + git + host)
 ```
 
 ## Part of SciTeX
