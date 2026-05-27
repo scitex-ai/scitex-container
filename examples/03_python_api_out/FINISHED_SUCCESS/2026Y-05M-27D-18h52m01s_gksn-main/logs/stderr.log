@@ -1,0 +1,176 @@
+INFO: ============================================================
+INFO: scitex_container Python API demo
+INFO: ============================================================
+INFO: 
+INFO: Version : 0.2.0
+INFO: Package : /work/src/scitex_container/__init__.py
+INFO: 
+INFO: Top-level public names:
+INFO:   __version__ = '0.2.0'
+INFO:   apptainer  [module]
+INFO:   docker  [module]
+INFO:   host  [module]
+INFO:   env_snapshot(containers_dir: 'str | Path | None' = None, dev_repos: 'list[str | Path] | None' = None) -> 'dict[str, Any]'
+INFO:   build(def_name: 'str' = 'scitex-cloud-shared-v0.1.0', output_dir: 'str | Path | None' = None, force: 'bool' = False, sandbox: 'bool' = False, *, def_path: 'str | Path | None' = None, image_name: 'str | None' = None, use_sudo: 'bool' = False, fakeroot: 'bool | None' = None) -> 'Path'
+INFO:   cleanup(containers_dir: 'Path', keep: 'int' = 3) -> 'list[Path]'
+INFO:   deploy(source_dir: 'Path', target_dir: 'Path' = PosixPath('/opt/scitex/singularity')) -> 'None'
+INFO:   list_versions(containers_dir: 'Path') -> 'list[dict]'
+INFO:   rollback(containers_dir: 'Path', use_sudo: 'bool' = False) -> 'str'
+INFO:   sandbox_create(source: 'str | Path', containers_dir: 'str | Path | None' = None, *, output_dir: 'str | Path | None' = None) -> 'Path'
+INFO:   status(containers_dir: 'str | Path | None' = None) -> 'list[dict]'
+INFO:   switch(version: 'str', containers_dir: 'Path', use_sudo: 'bool' = False) -> 'None'
+INFO:   verify(sif_path: 'str | Path', def_path: 'str | Path | None' = None, lock_dir: 'str | Path | None' = None) -> 'dict'
+INFO:   docker_rebuild(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'int'
+INFO:   docker_restart(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'int'
+INFO:   host_check() -> 'dict'
+INFO:   host_install(texlive: 'bool' = False, imagemagick: 'bool' = False, all: 'bool' = False, check_only: 'bool' = False) -> 'dict'
+INFO:   build_reproducible(layer: 'str', root: 'str | Path', *, def_path: 'str | Path | None' = None, def_name: 'str | None' = None, verify: 'bool' = True, keep: 'bool' = False, config: 'ImageConfig | None' = None, force: 'bool' = False) -> 'RoundTripResult'
+INFO:   verify_roundtrip(layer: 'str', root: 'str | Path', ts: 'str') -> 'LockDiff'
+INFO:   check_verified(sif_path: 'str | Path', *, require_verified: 'bool | None' = None, root: 'str | Path | None' = None, config: 'ImageConfig | None' = None) -> 'VerifyStatus'
+INFO:   list_builds(root: 'str | Path', layer: 'str') -> 'list[dict]'
+INFO: 
+INFO: ------------------------------------------------------------
+INFO: scitex_container.apptainer - functions and constants:
+INFO: ------------------------------------------------------------
+INFO:   ImageConfig  [class]
+INFO:   Lock  [class]
+INFO:   LockDiff  [class]
+INFO:   RoundTripResult  [class]
+INFO:   VerifyError  [class]
+INFO:   VerifyStatus  [class]
+INFO:   build(def_name: 'str' = 'scitex-cloud-shared-v0.1.0', output_dir: 'str | Path | None' = None, force: 'bool' = False, sandbox: 'bool' = False, *, def_path: 'str | Path | None' = None, image_name: 'str | None' = None, use_sudo: 'bool' = False, fakeroot: 'bool | None' = None) -> 'Path'
+INFO:     Build Apptainer/Singularity SIF or sandbox from .def file.
+INFO:   build_dev_pythonpath(dev_repos: 'list[dict]') -> 'str'
+INFO:     Build a PYTHONPATH string that prepends ``/opt/dev/{name}/src`` for each dev repo.
+INFO:   build_exec_args(container_path: 'str', username: 'str', host_user_dir: 'Path', host_project_dir: 'Path', project_slug: 'str', dev_repos: 'list[dict] | None' = None, host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '') -> 'list[str]'
+INFO:     Build the ``apptainer exec`` argument list.
+INFO:   build_host_mount_binds(host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '') -> 'list[str]'
+INFO:     Build ``--bind`` argument pairs for host package mounts.
+INFO:   build_instance_start_script(container_path: 'str', username: 'str', host_user_dir: 'Path', host_project_dir: 'Path', project_slug: 'str', instance_name: 'str', dev_repos: 'list[dict] | None' = None, host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '') -> 'str'
+INFO:     Build a bash script that starts an apptainer instance and keeps it alive.
+INFO:   build_reproducible(layer: 'str', root: 'str | Path', *, def_path: 'str | Path | None' = None, def_name: 'str | None' = None, verify: 'bool' = True, keep: 'bool' = False, config: 'ImageConfig | None' = None, force: 'bool' = False) -> 'RoundTripResult'
+INFO:     Run the reproducible round-trip and manage the artifact store.
+INFO:   build_sbatch_command(instance_name: 'str', script_path: 'str', slurm_partition: 'str' = 'compute', slurm_time_limit: 'str' = '8:00:00', slurm_cpus: 'int' = 4, slurm_memory_gb: 'int' = 16, username: 'str' = '', project_slug: 'str' = '') -> 'list[str]'
+INFO:     Build ``sbatch`` command to submit an allocation script.
+INFO:   build_shell_in_allocation_command(job_id: 'str', instance_name: 'str', username: 'str' = '') -> 'list[str]'
+INFO:     Build ``srun --overlap`` command to attach a shell inside an existing allocation.
+INFO:   build_srun_command(container_path: 'str', username: 'str', host_user_dir: 'Path', host_project_dir: 'Path', project_slug: 'str', dev_repos: 'list[dict] | None' = None, host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '', slurm_partition: 'str' = 'compute', slurm_time_limit: 'str' = '8:00:00', slurm_cpus: 'int' = 4, slurm_memory_gb: 'int' = 16, screen_session: 'str' = 'scitex-0') -> 'list[str]'
+INFO:     Build the complete ``srun`` + ``apptainer`` command list.
+INFO:   capture_lock(sif_path: 'str | Path', lock_path: 'str | Path') -> 'Lock'
+INFO:     Introspect a built SIF and write a combined ``.lock`` file.
+INFO:   check_verified(sif_path: 'str | Path', *, require_verified: 'bool | None' = None, root: 'str | Path | None' = None, config: 'ImageConfig | None' = None) -> 'VerifyStatus'
+INFO:     Check a built image's reproducibility marker — NOISY on every use.
+INFO:   cleanup(containers_dir: 'Path', keep: 'int' = 3) -> 'list[Path]'
+INFO:     Remove old scitex-v*.sif files, keeping the N most recent.
+INFO:   cleanup_sandboxes(containers_dir: 'Path', keep: 'int' = 5) -> 'list[Path]'
+INFO:     Remove old sandbox directories, keeping the N most recent.
+INFO:   cleanup_sifs(containers_dir: 'Path', keep: 'int' = 0) -> 'list[Path]'
+INFO:     Remove SIF files and related artifacts.
+INFO:   compare_locks(lock_a: 'Lock', lock_b: 'Lock') -> 'LockDiff'
+INFO:     Compare two locks' flat version sets — the round-trip gate.
+INFO:   deploy(source_dir: 'Path', target_dir: 'Path' = PosixPath('/opt/scitex/singularity')) -> 'None'
+INFO:     Copy active SIF and base SIF to target directory.
+INFO:   detect_container_cmd() -> 'str'
+INFO:     Detect apptainer or singularity command.
+INFO:   find_containers_dir() -> 'Path'
+INFO:     Find the containers directory.
+INFO:   freeze(sif_path: 'str | Path', output_dir: 'str | Path | None' = None) -> 'dict[str, Path]'
+INFO:     Extract pinned versions from a built SIF.
+INFO:   generate_locked_def(rough_def: 'str | Path', lock: 'Lock', out_def: 'str | Path') -> 'Path'
+INFO:     Emit a version-pinned ``.def`` from a rough ``.def`` + a lock.
+INFO:   get_active_sandbox(containers_dir: 'Path') -> 'str | None'
+INFO:     Read current-sandbox symlink to determine active sandbox version.
+INFO:   get_active_version(containers_dir: 'Path') -> 'str | None'
+INFO:     Read current.sif symlink to determine active version.
+INFO:   is_sandbox(path: 'str | Path') -> 'bool'
+INFO:     Check if path is a sandbox directory (not a SIF image).
+INFO:   list_builds(root: 'str | Path', layer: 'str') -> 'list[dict]'
+INFO:     List the timestamped builds of ``layer`` under ``root``.
+INFO:   list_sandboxes(containers_dir: 'Path') -> 'list[dict]'
+INFO:     List all versioned sandbox directories with metadata.
+INFO:   list_versions(containers_dir: 'Path') -> 'list[dict]'
+INFO:     List all versioned SIFs with metadata.
+INFO:   load_config(root: 'str | Path | None' = None) -> 'ImageConfig'
+INFO:     Load the reproducible-image config.
+INFO:   mark_unverified(root: 'str | Path', layer: 'str', ts: 'str', reason: 'str' = '') -> 'Path'
+INFO:     Write the ``.unverified`` marker for a build (clears ``.verified``).
+INFO:   mark_verified(root: 'str | Path', layer: 'str', ts: 'str') -> 'Path'
+INFO:     Write the ``.verified`` marker for a build (clears ``.unverified``).
+INFO:   point_latest(root: 'str | Path', layer: 'str', ts: 'str') -> 'Path'
+INFO:     Point the layer ``latest`` symlink at the ``(layer, ts)`` build.
+INFO:   protect(root: 'str | Path', layer: 'str', ts: 'str') -> 'Path'
+INFO:     Write the ``.keep`` prune-protect marker for a build.
+INFO:   prune(root: 'str | Path', layer: 'str', retain: 'int') -> 'list[str]'
+INFO:     Prune old builds of ``layer``, keeping the ``retain`` most recent.
+INFO:   read_lock(lock_path: 'str | Path') -> 'Lock'
+INFO:     Parse a combined ``.lock`` file back into a ``Lock``.
+INFO:   rollback(containers_dir: 'Path', use_sudo: 'bool' = False) -> 'str'
+INFO:     Switch to the version before the current one (by modification time).
+INFO:   rollback_sandbox(containers_dir: 'Path', use_sudo: 'bool' = False) -> 'str'
+INFO:     Switch to the sandbox before the current one (by modification time).
+INFO:   sandbox_configure_ps1(sandbox_dir: 'str | Path', default_ps1: 'str' = '\\W $ ') -> 'None'
+INFO:     Set PS1 prompt in a sandbox's environment script.
+INFO:   sandbox_create(source: 'str | Path', containers_dir: 'str | Path | None' = None, *, output_dir: 'str | Path | None' = None) -> 'Path'
+INFO:     Build a sandbox directory from a SIF image or .def file.
+INFO:   sandbox_maintain(sandbox_dir: 'str | Path', command: 'list[str]') -> 'int'
+INFO:     Run a command inside a sandbox with --writable --fakeroot flags.
+INFO:   sandbox_to_sif(sandbox_dir: 'str | Path', output_sif: 'str | Path') -> 'Path'
+INFO:     Convert a sandbox directory back to a SIF image.
+INFO:   sandbox_update(sandbox_dir: 'str | Path', *, proj_root: 'str | Path | None' = None, packages: 'tuple[str, ...] | None' = None, install_deps: 'bool' = False) -> 'dict[str, str]'
+INFO:     Incrementally update ecosystem packages inside an existing sandbox.
+INFO:   status(containers_dir: 'str | Path | None' = None) -> 'list[dict]'
+INFO:     List available containers and their status.
+INFO:   switch_sandbox(version: 'str', containers_dir: 'Path', use_sudo: 'bool' = False) -> 'None'
+INFO:     Atomically switch current-sandbox symlink to sandbox-{version}/.
+INFO:   switch_version(version: 'str', containers_dir: 'Path', use_sudo: 'bool' = False) -> 'None'
+INFO:     Atomically switch current.sif symlink to scitex-v{version}.sif.
+INFO:   verify(sif_path: 'str | Path', def_path: 'str | Path | None' = None, lock_dir: 'str | Path | None' = None) -> 'dict'
+INFO:     Verify container integrity.
+INFO:   verify_roundtrip(layer: 'str', root: 'str | Path', ts: 'str') -> 'LockDiff'
+INFO:     Rebuild from the locked def, compare version sets, mark the build.
+INFO:   write_lock(lock: 'Lock', lock_path: 'str | Path') -> 'Path'
+INFO:     Serialize a ``Lock`` to the combined ``.lock`` text format.
+INFO: 
+INFO: ------------------------------------------------------------
+INFO: scitex_container.docker - functions:
+INFO: ------------------------------------------------------------
+INFO:   get_dev_mounts(repos: 'list[dict]') -> 'list[str]'
+INFO:     Generate Docker volume mount strings for development repositories.
+INFO:   rebuild(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'int'
+INFO:     Rebuild Docker containers without using the cache.
+INFO:   restart(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'int'
+INFO:     Restart Docker containers (down then up).
+INFO:   status(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'dict'
+INFO:     Get Docker container status for the given compose environment.
+INFO: 
+INFO: ------------------------------------------------------------
+INFO: scitex_container.host - functions and constants:
+INFO: ------------------------------------------------------------
+INFO:   TEXLIVE_BINARIES = ['pdflatex', 'bibtex', 'latexmk', 'latexdiff', 'kpsewhich', 'makeindex', 'biber']
+INFO:   TEXLIVE_DIRS = ['share/texlive', 'share/texmf-dist']
+INFO:   check_packages() -> 'dict'
+INFO:     Check which host packages are installed.
+INFO:   get_mount_config(texlive_prefix: 'str' = '', host_mounts_raw: 'str' = '') -> 'dict'
+INFO:     Parse mount configuration and return structured bind mount info.
+INFO:   get_texlive_binds(prefix: 'str' = '/usr') -> 'list[dict]'
+INFO:     Generate bind mount entries for TeXLive.
+INFO:   install_packages(texlive: 'bool' = False, imagemagick: 'bool' = False, all: 'bool' = False, check_only: 'bool' = False) -> 'dict'
+INFO:     Install host packages by calling the shell script.
+INFO: 
+INFO: ------------------------------------------------------------
+INFO: Container tool detection:
+INFO: ------------------------------------------------------------
+INFO:   Apptainer not detected: Neither apptainer nor singularity is installed. Install with: sudo apt-get install apptainer
+INFO:   Docker binary: not found
+INFO: 
+INFO: API report written to: /uvwork/wt-audit-fix/examples/03_python_api_out/RUNNING/2026Y-05M-27D-18h52m01s_gksn-main/api_report.json
+ERRO: Error occurred while saving: _save_pickle() got an unexpected keyword argument 'track'
+ERRO: Debug: Initial script_path = /uvwork/venv-agent/lib/python3.12/site-packages/scitex_session/_lifecycle/_config.py
+ERRO: Debug: Final spath = /uvwork/wt-audit-fix/examples/03_python_api_out/RUNNING/2026Y-05M-27D-18h52m01s_gksn-main/CONFIGS/CONFIG.pkl
+ERRO: Debug: specified_path type = <class 'str'>
+ERRO: Debug: specified_path = /uvwork/wt-audit-fix/examples/03_python_api_out/RUNNING/2026Y-05M-27D-18h52m01s_gksn-main/CONFIGS/CONFIG.pkl
+ERRO: Error occurred while saving: _save_yaml() got an unexpected keyword argument 'track'
+ERRO: Debug: Initial script_path = /uvwork/venv-agent/lib/python3.12/site-packages/scitex_session/_lifecycle/_config.py
+ERRO: Debug: Final spath = /uvwork/wt-audit-fix/examples/03_python_api_out/RUNNING/2026Y-05M-27D-18h52m01s_gksn-main/CONFIGS/CONFIG.yaml
+ERRO: Debug: specified_path type = <class 'str'>
+ERRO: Debug: specified_path = /uvwork/wt-audit-fix/examples/03_python_api_out/RUNNING/2026Y-05M-27D-18h52m01s_gksn-main/CONFIGS/CONFIG.yaml

@@ -792,6 +792,14 @@ flycheck_*.el
 !.gitkeep
 !**/.gitkeep
 
+# PS-503 (scitex-dev audit): keep example FINISHED_SUCCESS artefacts in git
+# so README / GitHub viewers see real demo output. These negations override
+# the generic **FINISHED**, **/202?Y-*, *.log, etc. patterns above. The
+# rule only checks for the existence of FINISHED_SUCCESS/<session_id>/
+# with at least one entry; the contents are the captured demo run.
+!examples/*_out/FINISHED_SUCCESS/
+!examples/*_out/FINISHED_SUCCESS/**
+
 ### Source: /home/ywatanabe/.git-templates/.gitignore-templates/Custom/SLURM.gitignore ###
 slurm_logs
 

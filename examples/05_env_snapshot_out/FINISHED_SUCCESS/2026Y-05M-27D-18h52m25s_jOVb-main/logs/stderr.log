@@ -1,0 +1,78 @@
+INFO: ============================================================
+INFO: env_snapshot() - basic (auto-detect containers dir)
+INFO: ============================================================
+INFO: 
+INFO: {
+INFO:   "schema_version": "1.0",
+INFO:   "timestamp": "2026-05-27T08:52:28.258755+00:00",
+INFO:   "container": {},
+INFO:   "host": {
+INFO:     "texlive": {
+INFO:       "installed": false,
+INFO:       "version": ""
+INFO:     },
+INFO:     "imagemagick": {
+INFO:       "installed": false,
+INFO:       "version": ""
+INFO:     }
+INFO:   },
+INFO:   "dev_repos": [],
+INFO:   "lock_files": {}
+INFO: }
+INFO: 
+INFO: ============================================================
+INFO: env_snapshot() - with dev_repos argument
+INFO: ============================================================
+INFO: 
+INFO: {
+INFO:   "schema_version": "1.0",
+INFO:   "timestamp": "2026-05-27T08:52:28.265499+00:00",
+INFO:   "container": {},
+INFO:   "host": {
+INFO:     "texlive": {
+INFO:       "installed": false,
+INFO:       "version": ""
+INFO:     },
+INFO:     "imagemagick": {
+INFO:       "installed": false,
+INFO:       "version": ""
+INFO:     }
+INFO:   },
+INFO:   "dev_repos": [
+INFO:     {
+INFO:       "name": "work",
+INFO:       "path": "/work",
+INFO:       "commit": "753d4a7638dc79530a2ec711782579c21d47aaa1",
+INFO:       "branch": "develop",
+INFO:       "dirty": false
+INFO:     }
+INFO:   ],
+INFO:   "lock_files": {}
+INFO: }
+INFO: 
+INFO: ============================================================
+INFO: Snapshot structure summary
+INFO: ============================================================
+INFO: 
+INFO:   schema_version : 1.0
+INFO:   timestamp      : 2026-05-27T08:52:28.258755+00:00
+INFO:   container      : (not detected - Apptainer containers dir absent)
+INFO:   host packages  :
+INFO:     texlive: missing
+INFO:     imagemagick: missing
+INFO:   dev_repos      :
+INFO:     work: develop@753d4a7638dc
+INFO:   lock_files     : (none found)
+INFO: 
+INFO: Basic snapshot written to   : /uvwork/wt-audit-fix/examples/05_env_snapshot_out/RUNNING/2026Y-05M-27D-18h52m25s_jOVb-main/snapshot_basic.json
+INFO: Dev-repos snapshot written to: /uvwork/wt-audit-fix/examples/05_env_snapshot_out/RUNNING/2026Y-05M-27D-18h52m25s_jOVb-main/snapshot_with_repos.json
+ERRO: Error occurred while saving: _save_pickle() got an unexpected keyword argument 'track'
+ERRO: Debug: Initial script_path = /uvwork/venv-agent/lib/python3.12/site-packages/scitex_session/_lifecycle/_config.py
+ERRO: Debug: Final spath = /uvwork/wt-audit-fix/examples/05_env_snapshot_out/RUNNING/2026Y-05M-27D-18h52m25s_jOVb-main/CONFIGS/CONFIG.pkl
+ERRO: Debug: specified_path type = <class 'str'>
+ERRO: Debug: specified_path = /uvwork/wt-audit-fix/examples/05_env_snapshot_out/RUNNING/2026Y-05M-27D-18h52m25s_jOVb-main/CONFIGS/CONFIG.pkl
+ERRO: Error occurred while saving: _save_yaml() got an unexpected keyword argument 'track'
+ERRO: Debug: Initial script_path = /uvwork/venv-agent/lib/python3.12/site-packages/scitex_session/_lifecycle/_config.py
+ERRO: Debug: Final spath = /uvwork/wt-audit-fix/examples/05_env_snapshot_out/RUNNING/2026Y-05M-27D-18h52m25s_jOVb-main/CONFIGS/CONFIG.yaml
+ERRO: Debug: specified_path type = <class 'str'>
+ERRO: Debug: specified_path = /uvwork/wt-audit-fix/examples/05_env_snapshot_out/RUNNING/2026Y-05M-27D-18h52m25s_jOVb-main/CONFIGS/CONFIG.yaml
