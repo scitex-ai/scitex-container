@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-05-27T08:52:28.258755+00:00",
+  "container": {},
+  "host": {
+    "texlive": {
+      "installed": false,
+      "version": ""
+    },
+    "imagemagick": {
+      "installed": false,
+      "version": ""
+    }
+  },
+  "dev_repos": [],
+  "lock_files": {}
+}

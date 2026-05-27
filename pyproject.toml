@@ -70,6 +70,35 @@ addopts = "-v --tb=short"
 [tool.scitex-linter]
 library_dirs = ["src", "tests", "examples"]
 
+[tool.scitex_dev]
+# §6 (MCP parity) — scitex-container exposes a curated agentic surface
+# (14 tools), not a 1:1 mirror of its 70 Python helpers. Internal helpers
+# such as apptainer_build_exec_args, apptainer_compare_locks, host_get_mount_config
+# are CLI / Python building blocks, not agent-facing primitives. Declare
+# the curated set so the §6 check verifies exact parity against this list
+# instead of demanding wrappers for every public helper. (Canonical
+# alternative to a blanket `mcp_parity_exempt = true`, kept finer-grained
+# so adding/removing a real tool is still caught.)
+#
+# Names are bare (no `container_` prefix); the auditor normalizes both
+# sides. `skills_list` / `skills_get` are always implicitly permitted.
+mcp_tools_allowlist = [
+    "build",            # container_build
+    "list_versions",    # container_list_versions
+    "switch",           # container_switch
+    "rollback",         # container_rollback
+    "deploy",           # container_deploy
+    "cleanup",          # container_cleanup
+    "status",           # container_status
+    "sandbox_create",   # sandbox_create
+    "docker_rebuild",   # docker_rebuild
+    "docker_restart",   # docker_restart
+    "host_install",     # host_install
+    "host_check",       # host_check
+    "verify",           # container_verify
+    "env_snapshot",     # container_env_snapshot
+]
+
 [tool.coverage.run]
 parallel = true
 source = ["scitex_container"]

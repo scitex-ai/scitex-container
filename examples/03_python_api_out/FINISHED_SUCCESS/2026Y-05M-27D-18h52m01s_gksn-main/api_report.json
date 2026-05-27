@@ -1,0 +1,249 @@
+{
+  "version": "0.2.0",
+  "apptainer": {
+    "ImageConfig": {
+      "kind": "class"
+    },
+    "Lock": {
+      "kind": "class"
+    },
+    "LockDiff": {
+      "kind": "class"
+    },
+    "RoundTripResult": {
+      "kind": "class"
+    },
+    "VerifyError": {
+      "kind": "class"
+    },
+    "VerifyStatus": {
+      "kind": "class"
+    },
+    "build": {
+      "signature": "(def_name: 'str' = 'scitex-cloud-shared-v0.1.0', output_dir: 'str | Path | None' = None, force: 'bool' = False, sandbox: 'bool' = False, *, def_path: 'str | Path | None' = None, image_name: 'str | None' = None, use_sudo: 'bool' = False, fakeroot: 'bool | None' = None) -> 'Path'",
+      "doc": "Build Apptainer/Singularity SIF or sandbox from .def file."
+    },
+    "build_dev_pythonpath": {
+      "signature": "(dev_repos: 'list[dict]') -> 'str'",
+      "doc": "Build a PYTHONPATH string that prepends ``/opt/dev/{name}/src`` for each dev repo."
+    },
+    "build_exec_args": {
+      "signature": "(container_path: 'str', username: 'str', host_user_dir: 'Path', host_project_dir: 'Path', project_slug: 'str', dev_repos: 'list[dict] | None' = None, host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '') -> 'list[str]'",
+      "doc": "Build the ``apptainer exec`` argument list."
+    },
+    "build_host_mount_binds": {
+      "signature": "(host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '') -> 'list[str]'",
+      "doc": "Build ``--bind`` argument pairs for host package mounts."
+    },
+    "build_instance_start_script": {
+      "signature": "(container_path: 'str', username: 'str', host_user_dir: 'Path', host_project_dir: 'Path', project_slug: 'str', instance_name: 'str', dev_repos: 'list[dict] | None' = None, host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '') -> 'str'",
+      "doc": "Build a bash script that starts an apptainer instance and keeps it alive."
+    },
+    "build_reproducible": {
+      "signature": "(layer: 'str', root: 'str | Path', *, def_path: 'str | Path | None' = None, def_name: 'str | None' = None, verify: 'bool' = True, keep: 'bool' = False, config: 'ImageConfig | None' = None, force: 'bool' = False) -> 'RoundTripResult'",
+      "doc": "Run the reproducible round-trip and manage the artifact store."
+    },
+    "build_sbatch_command": {
+      "signature": "(instance_name: 'str', script_path: 'str', slurm_partition: 'str' = 'compute', slurm_time_limit: 'str' = '8:00:00', slurm_cpus: 'int' = 4, slurm_memory_gb: 'int' = 16, username: 'str' = '', project_slug: 'str' = '') -> 'list[str]'",
+      "doc": "Build ``sbatch`` command to submit an allocation script."
+    },
+    "build_shell_in_allocation_command": {
+      "signature": "(job_id: 'str', instance_name: 'str', username: 'str' = '') -> 'list[str]'",
+      "doc": "Build ``srun --overlap`` command to attach a shell inside an existing allocation."
+    },
+    "build_srun_command": {
+      "signature": "(container_path: 'str', username: 'str', host_user_dir: 'Path', host_project_dir: 'Path', project_slug: 'str', dev_repos: 'list[dict] | None' = None, host_mounts: 'list[dict] | None' = None, texlive_prefix: 'str' = '', slurm_partition: 'str' = 'compute', slurm_time_limit: 'str' = '8:00:00', slurm_cpus: 'int' = 4, slurm_memory_gb: 'int' = 16, screen_session: 'str' = 'scitex-0') -> 'list[str]'",
+      "doc": "Build the complete ``srun`` + ``apptainer`` command list."
+    },
+    "capture_lock": {
+      "signature": "(sif_path: 'str | Path', lock_path: 'str | Path') -> 'Lock'",
+      "doc": "Introspect a built SIF and write a combined ``.lock`` file."
+    },
+    "check_verified": {
+      "signature": "(sif_path: 'str | Path', *, require_verified: 'bool | None' = None, root: 'str | Path | None' = None, config: 'ImageConfig | None' = None) -> 'VerifyStatus'",
+      "doc": "Check a built image's reproducibility marker \u2014 NOISY on every use."
+    },
+    "cleanup": {
+      "signature": "(containers_dir: 'Path', keep: 'int' = 3) -> 'list[Path]'",
+      "doc": "Remove old scitex-v*.sif files, keeping the N most recent."
+    },
+    "cleanup_sandboxes": {
+      "signature": "(containers_dir: 'Path', keep: 'int' = 5) -> 'list[Path]'",
+      "doc": "Remove old sandbox directories, keeping the N most recent."
+    },
+    "cleanup_sifs": {
+      "signature": "(containers_dir: 'Path', keep: 'int' = 0) -> 'list[Path]'",
+      "doc": "Remove SIF files and related artifacts."
+    },
+    "compare_locks": {
+      "signature": "(lock_a: 'Lock', lock_b: 'Lock') -> 'LockDiff'",
+      "doc": "Compare two locks' flat version sets \u2014 the round-trip gate."
+    },
+    "deploy": {
+      "signature": "(source_dir: 'Path', target_dir: 'Path' = PosixPath('/opt/scitex/singularity')) -> 'None'",
+      "doc": "Copy active SIF and base SIF to target directory."
+    },
+    "detect_container_cmd": {
+      "signature": "() -> 'str'",
+      "doc": "Detect apptainer or singularity command."
+    },
+    "find_containers_dir": {
+      "signature": "() -> 'Path'",
+      "doc": "Find the containers directory."
+    },
+    "freeze": {
+      "signature": "(sif_path: 'str | Path', output_dir: 'str | Path | None' = None) -> 'dict[str, Path]'",
+      "doc": "Extract pinned versions from a built SIF."
+    },
+    "generate_locked_def": {
+      "signature": "(rough_def: 'str | Path', lock: 'Lock', out_def: 'str | Path') -> 'Path'",
+      "doc": "Emit a version-pinned ``.def`` from a rough ``.def`` + a lock."
+    },
+    "get_active_sandbox": {
+      "signature": "(containers_dir: 'Path') -> 'str | None'",
+      "doc": "Read current-sandbox symlink to determine active sandbox version."
+    },
+    "get_active_version": {
+      "signature": "(containers_dir: 'Path') -> 'str | None'",
+      "doc": "Read current.sif symlink to determine active version."
+    },
+    "is_sandbox": {
+      "signature": "(path: 'str | Path') -> 'bool'",
+      "doc": "Check if path is a sandbox directory (not a SIF image)."
+    },
+    "list_builds": {
+      "signature": "(root: 'str | Path', layer: 'str') -> 'list[dict]'",
+      "doc": "List the timestamped builds of ``layer`` under ``root``."
+    },
+    "list_sandboxes": {
+      "signature": "(containers_dir: 'Path') -> 'list[dict]'",
+      "doc": "List all versioned sandbox directories with metadata."
+    },
+    "list_versions": {
+      "signature": "(containers_dir: 'Path') -> 'list[dict]'",
+      "doc": "List all versioned SIFs with metadata."
+    },
+    "load_config": {
+      "signature": "(root: 'str | Path | None' = None) -> 'ImageConfig'",
+      "doc": "Load the reproducible-image config."
+    },
+    "mark_unverified": {
+      "signature": "(root: 'str | Path', layer: 'str', ts: 'str', reason: 'str' = '') -> 'Path'",
+      "doc": "Write the ``.unverified`` marker for a build (clears ``.verified``)."
+    },
+    "mark_verified": {
+      "signature": "(root: 'str | Path', layer: 'str', ts: 'str') -> 'Path'",
+      "doc": "Write the ``.verified`` marker for a build (clears ``.unverified``)."
+    },
+    "point_latest": {
+      "signature": "(root: 'str | Path', layer: 'str', ts: 'str') -> 'Path'",
+      "doc": "Point the layer ``latest`` symlink at the ``(layer, ts)`` build."
+    },
+    "protect": {
+      "signature": "(root: 'str | Path', layer: 'str', ts: 'str') -> 'Path'",
+      "doc": "Write the ``.keep`` prune-protect marker for a build."
+    },
+    "prune": {
+      "signature": "(root: 'str | Path', layer: 'str', retain: 'int') -> 'list[str]'",
+      "doc": "Prune old builds of ``layer``, keeping the ``retain`` most recent."
+    },
+    "read_lock": {
+      "signature": "(lock_path: 'str | Path') -> 'Lock'",
+      "doc": "Parse a combined ``.lock`` file back into a ``Lock``."
+    },
+    "rollback": {
+      "signature": "(containers_dir: 'Path', use_sudo: 'bool' = False) -> 'str'",
+      "doc": "Switch to the version before the current one (by modification time)."
+    },
+    "rollback_sandbox": {
+      "signature": "(containers_dir: 'Path', use_sudo: 'bool' = False) -> 'str'",
+      "doc": "Switch to the sandbox before the current one (by modification time)."
+    },
+    "sandbox_configure_ps1": {
+      "signature": "(sandbox_dir: 'str | Path', default_ps1: 'str' = '\\\\W $ ') -> 'None'",
+      "doc": "Set PS1 prompt in a sandbox's environment script."
+    },
+    "sandbox_create": {
+      "signature": "(source: 'str | Path', containers_dir: 'str | Path | None' = None, *, output_dir: 'str | Path | None' = None) -> 'Path'",
+      "doc": "Build a sandbox directory from a SIF image or .def file."
+    },
+    "sandbox_maintain": {
+      "signature": "(sandbox_dir: 'str | Path', command: 'list[str]') -> 'int'",
+      "doc": "Run a command inside a sandbox with --writable --fakeroot flags."
+    },
+    "sandbox_to_sif": {
+      "signature": "(sandbox_dir: 'str | Path', output_sif: 'str | Path') -> 'Path'",
+      "doc": "Convert a sandbox directory back to a SIF image."
+    },
+    "sandbox_update": {
+      "signature": "(sandbox_dir: 'str | Path', *, proj_root: 'str | Path | None' = None, packages: 'tuple[str, ...] | None' = None, install_deps: 'bool' = False) -> 'dict[str, str]'",
+      "doc": "Incrementally update ecosystem packages inside an existing sandbox."
+    },
+    "status": {
+      "signature": "(containers_dir: 'str | Path | None' = None) -> 'list[dict]'",
+      "doc": "List available containers and their status."
+    },
+    "switch_sandbox": {
+      "signature": "(version: 'str', containers_dir: 'Path', use_sudo: 'bool' = False) -> 'None'",
+      "doc": "Atomically switch current-sandbox symlink to sandbox-{version}/."
+    },
+    "switch_version": {
+      "signature": "(version: 'str', containers_dir: 'Path', use_sudo: 'bool' = False) -> 'None'",
+      "doc": "Atomically switch current.sif symlink to scitex-v{version}.sif."
+    },
+    "verify": {
+      "signature": "(sif_path: 'str | Path', def_path: 'str | Path | None' = None, lock_dir: 'str | Path | None' = None) -> 'dict'",
+      "doc": "Verify container integrity."
+    },
+    "verify_roundtrip": {
+      "signature": "(layer: 'str', root: 'str | Path', ts: 'str') -> 'LockDiff'",
+      "doc": "Rebuild from the locked def, compare version sets, mark the build."
+    },
+    "write_lock": {
+      "signature": "(lock: 'Lock', lock_path: 'str | Path') -> 'Path'",
+      "doc": "Serialize a ``Lock`` to the combined ``.lock`` text format."
+    }
+  },
+  "docker": {
+    "get_dev_mounts": {
+      "signature": "(repos: 'list[dict]') -> 'list[str]'",
+      "doc": "Generate Docker volume mount strings for development repositories."
+    },
+    "rebuild": {
+      "signature": "(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'int'",
+      "doc": "Rebuild Docker containers without using the cache."
+    },
+    "restart": {
+      "signature": "(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'int'",
+      "doc": "Restart Docker containers (down then up)."
+    },
+    "status": {
+      "signature": "(env: 'str' = 'dev', project_dir: 'str | Path | None' = None) -> 'dict'",
+      "doc": "Get Docker container status for the given compose environment."
+    }
+  },
+  "host": {
+    "TEXLIVE_BINARIES": {
+      "value": "['pdflatex', 'bibtex', 'latexmk', 'latexdiff', 'kpsewhich', 'makeindex', 'biber']"
+    },
+    "TEXLIVE_DIRS": {
+      "value": "['share/texlive', 'share/texmf-dist']"
+    },
+    "check_packages": {
+      "signature": "() -> 'dict'",
+      "doc": "Check which host packages are installed."
+    },
+    "get_mount_config": {
+      "signature": "(texlive_prefix: 'str' = '', host_mounts_raw: 'str' = '') -> 'dict'",
+      "doc": "Parse mount configuration and return structured bind mount info."
+    },
+    "get_texlive_binds": {
+      "signature": "(prefix: 'str' = '/usr') -> 'list[dict]'",
+      "doc": "Generate bind mount entries for TeXLive."
+    },
+    "install_packages": {
+      "signature": "(texlive: 'bool' = False, imagemagick: 'bool' = False, all: 'bool' = False, check_only: 'bool' = False) -> 'dict'",
+      "doc": "Install host packages by calling the shell script."
+    }
+  }
+}

@@ -20,16 +20,4 @@ def test_audit_all_clean():
         )
     from scitex_dev.testing import audit_all_for_package
 
-    audit_all_for_package(
-        "scitex-container",
-        skip_rules=(
-            # PS-503 — examples/{03_python_api,05_env_snapshot}_out/ need
-            # FINISHED_SUCCESS/<id>/ artefacts. Both examples wrap @stx.session
-            # which needs the scitex umbrella. Tracked: run them once per
-            # release and commit the output dirs.
-            "PS-503",
-            # §6 — 37/51 Python APIs unmapped to MCP tools (apptainer_*).
-            # Real architectural-parity gap; per-API decision needed.
-            "§6",
-        ),
-    )
+    audit_all_for_package("scitex-container")
