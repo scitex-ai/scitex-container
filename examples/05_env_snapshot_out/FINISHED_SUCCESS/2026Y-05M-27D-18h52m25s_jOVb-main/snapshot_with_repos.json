@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-05-27T08:52:28.265499+00:00",
+  "container": {},
+  "host": {
+    "texlive": {
+      "installed": false,
+      "version": ""
+    },
+    "imagemagick": {
+      "installed": false,
+      "version": ""
+    }
+  },
+  "dev_repos": [
+    {
+      "name": "work",
+      "path": "/work",
+      "commit": "753d4a7638dc79530a2ec711782579c21d47aaa1",
+      "branch": "develop",
+      "dirty": false
+    }
+  ],
+  "lock_files": {}
+}
