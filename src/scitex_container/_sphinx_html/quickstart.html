@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; scitex-container 0.1.11 documentation</title>
+  <title>Quickstart &mdash; scitex-container 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1e825a29"></script>
+      <script src="_static/documentation_options.js?v=37f418d5"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -124,22 +124,33 @@
 </section>
 <section id="python-api-quickstart">
 <h2>Python API Quickstart<a class="headerlink" href="#python-api-quickstart" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scitex_container</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sc</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scitex_container</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ctr</span>
 
 <span class="c1"># Apptainer operations</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">def_name</span><span class="o">=</span><span class="s2">&quot;scitex-final&quot;</span><span class="p">,</span> <span class="n">sandbox</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">switch_version</span><span class="p">(</span><span class="s2">&quot;2.19.5&quot;</span><span class="p">,</span> <span class="n">containers_dir</span><span class="o">=</span><span class="s2">&quot;/opt/containers&quot;</span><span class="p">)</span>
-<span class="n">versions</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">list_versions</span><span class="p">(</span><span class="n">containers_dir</span><span class="o">=</span><span class="s2">&quot;/opt/containers&quot;</span><span class="p">)</span>
-<span class="n">status</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+<span class="n">ctr</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">def_name</span><span class="o">=</span><span class="s2">&quot;scitex-final&quot;</span><span class="p">,</span> <span class="n">sandbox</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ctr</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">switch_version</span><span class="p">(</span><span class="s2">&quot;2.19.5&quot;</span><span class="p">,</span> <span class="n">containers_dir</span><span class="o">=</span><span class="s2">&quot;/opt/containers&quot;</span><span class="p">)</span>
+<span class="n">versions</span> <span class="o">=</span> <span class="n">ctr</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">list_versions</span><span class="p">(</span><span class="n">containers_dir</span><span class="o">=</span><span class="s2">&quot;/opt/containers&quot;</span><span class="p">)</span>
+<span class="n">status</span> <span class="o">=</span> <span class="n">ctr</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+
+<span class="c1"># Reproducible build round-trip</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">ctr</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">build_reproducible</span><span class="p">(</span>
+    <span class="n">layer</span><span class="o">=</span><span class="s2">&quot;sac-base&quot;</span><span class="p">,</span>
+    <span class="n">root</span><span class="o">=</span><span class="s2">&quot;/opt/containers&quot;</span><span class="p">,</span>
+    <span class="n">def_name</span><span class="o">=</span><span class="s2">&quot;apptainer-base&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Verified: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">verified</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Use-time verify gate</span>
+<span class="n">ctr</span><span class="o">.</span><span class="n">apptainer</span><span class="o">.</span><span class="n">check_verified</span><span class="p">(</span><span class="s2">&quot;/opt/containers/sac-base.sif&quot;</span><span class="p">)</span>
 
 <span class="c1"># Host operations</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">host</span><span class="o">.</span><span class="n">check_packages</span><span class="p">()</span>
+<span class="n">ctr</span><span class="o">.</span><span class="n">host</span><span class="o">.</span><span class="n">check_packages</span><span class="p">()</span>
 
 <span class="c1"># Docker operations</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">docker</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">)</span>
+<span class="n">ctr</span><span class="o">.</span><span class="n">docker</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">)</span>
 
 <span class="c1"># Environment snapshot</span>
-<span class="n">snapshot</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">env_snapshot</span><span class="p">()</span>
+<span class="n">snapshot</span> <span class="o">=</span> <span class="n">ctr</span><span class="o">.</span><span class="n">env_snapshot</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>

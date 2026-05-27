@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCP Reference &mdash; scitex-container 0.1.11 documentation</title>
+  <title>MCP Reference &mdash; scitex-container 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1e825a29"></script>
+      <script src="_static/documentation_options.js?v=37f418d5"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI Reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MCP Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#starting-the-server">Starting the Server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#available-mcp-tools">Available MCP Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-mcp-tools-16-total">Available MCP Tools (16 total)</a></li>
 </ul>
 </li>
 </ul>
@@ -102,8 +102,8 @@ AI agents can manage containers autonomously.</p>
 </pre></div>
 </div>
 </section>
-<section id="available-mcp-tools">
-<h2>Available MCP Tools<a class="headerlink" href="#available-mcp-tools" title="Link to this heading"></a></h2>
+<section id="available-mcp-tools-16-total">
+<h2>Available MCP Tools (16 total)<a class="headerlink" href="#available-mcp-tools-16-total" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 30.0%" />
@@ -115,44 +115,53 @@ AI agents can manage containers autonomously.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
-<td><p>Show unified container/host status dashboard</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">container_build</span></code></p></td>
+<td><p>Build a SIF or sandbox from a .def file</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">build</span></code></p></td>
-<td><p>Build a SIF container from a definition file</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">container_list_versions</span></code></p></td>
+<td><p>List versioned SIFs with active marker</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
-<td><p>List available container versions</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">container_switch</span></code></p></td>
+<td><p>Switch active SIF version</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">switch</span></code></p></td>
-<td><p>Switch active container version</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">container_rollback</span></code></p></td>
+<td><p>Roll back to previous SIF version</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollback</span></code></p></td>
-<td><p>Roll back to previous version</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">container_deploy</span></code></p></td>
+<td><p>Copy active SIF to production target dir</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deploy</span></code></p></td>
-<td><p>Deploy a container version</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">container_cleanup</span></code></p></td>
+<td><p>Remove old SIF versions (keep N most recent)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cleanup</span></code></p></td>
-<td><p>Remove old container versions</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">container_verify</span></code></p></td>
+<td><p>Verify SIF SHA256, .def origin, and lock file consistency</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">container_status</span></code></p></td>
+<td><p>Unified dashboard: Apptainer + host packages + Docker</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">container_env_snapshot</span></code></p></td>
+<td><p>Capture environment snapshot (container + host + git)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">container_skills_get</span></code></p></td>
+<td><p>Get content of a bundled skill file by name</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">container_skills_list</span></code></p></td>
+<td><p>List bundled skill files</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sandbox_create</span></code></p></td>
-<td><p>Create writable sandbox from SIF</p></td>
+<td><p>Convert a SIF to a writable timestamped sandbox directory</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">docker_rebuild</span></code></p></td>
-<td><p>Rebuild Docker Compose services</p></td>
+<td><p>Rebuild Docker images without cache</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">docker_restart</span></code></p></td>
-<td><p>Restart Docker services</p></td>
+<td><p>Restart Docker containers (compose down + up -d)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">host_install</span></code></p></td>
-<td><p>Install host-side packages</p></td>
+<td><p>Install TeXLive / ImageMagick on the host</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">host_check</span></code></p></td>
-<td><p>Check host package status</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">env_snapshot</span></code></p></td>
-<td><p>Capture reproducibility snapshot</p></td>
+<td><p>Check which host packages are installed</p></td>
 </tr>
 </tbody>
 </table>

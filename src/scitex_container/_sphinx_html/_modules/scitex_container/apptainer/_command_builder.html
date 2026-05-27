@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scitex_container.apptainer._command_builder &mdash; scitex-container 0.1.11 documentation</title>
+  <title>scitex_container.apptainer._command_builder &mdash; scitex-container 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1e825a29"></script>
+      <script src="../../../_static/documentation_options.js?v=37f418d5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -159,11 +159,9 @@
 <span class="sd">    texlive_prefix : str</span>
 <span class="sd">        Host prefix for TeX Live installation (e.g. ``/usr``). When set,</span>
 <span class="sd">        auto-generates bind entries for TeX Live share directories and binaries.</span>
-<span class="sd">        Example: ``/usr`` generates:</span>
-<span class="sd">          ``--bind /usr/share/texlive:/usr/share/texlive:ro``</span>
-<span class="sd">          ``--bind /usr/share/texmf-dist:/usr/share/texmf-dist:ro``</span>
-<span class="sd">          ``--bind /usr/bin/pdflatex:/usr/bin/pdflatex:ro``</span>
-<span class="sd">          ... (all _TEXLIVE_BINS)</span>
+<span class="sd">        Example: ``/usr`` generates ``--bind`` entries for</span>
+<span class="sd">        ``/usr/share/texlive``, ``/usr/share/texmf-dist``,</span>
+<span class="sd">        ``/usr/bin/pdflatex`` (and all ``_TEXLIVE_BINS``), each ``:ro``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -213,6 +211,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the ``apptainer exec`` argument list.</span>
 
 <span class="sd">    Handles:</span>
+
 <span class="sd">    - Sandbox vs SIF detection. Both use ``--writable-tmpfs`` for user</span>
 <span class="sd">      sessions so each user gets a clean per-session tmpfs overlay.</span>
 <span class="sd">    - For SIF images, ``--containall`` is added to prevent host mounts</span>
@@ -326,6 +325,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a bash script that starts an apptainer instance and keeps it alive.</span>
 
 <span class="sd">    This script is designed to be submitted via ``sbatch``. It:</span>
+
 <span class="sd">    1. Starts an apptainer instance with ``--writable-tmpfs`` (shared overlay).</span>
 <span class="sd">    2. Prints ``INSTANCE_READY`` on success or ``INSTANCE_FAILED`` on failure.</span>
 <span class="sd">    3. Sleeps in a loop while the instance is alive (sbatch keeps the</span>
