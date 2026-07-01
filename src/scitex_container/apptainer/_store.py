@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import logging
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -178,6 +179,37 @@ def _active_ts(root: Path, layer: str) -> str | None:
     return m2.group(1) if m2 else None
 
 
+def atomic_symlink(link: str | Path, rel_target: str | Path) -> Path:
+    """Atomically point ``link`` at ``rel_target`` (temp symlink + os.replace).
+
+    The single SSOT for the safe-swap primitive: write a temporary symlink
+    beside ``link`` (same directory → same filesystem, so the rename is
+    atomic), then ``os.replace`` it onto ``link``. Any existing symlink OR
+    real file at ``link`` is replaced atomically — a concurrent reader sees
+    either the old target or the new one, never a missing/partial link.
+
+    ``rel_target`` is written verbatim as the symlink target; keep it
+    relative to ``link``'s parent so the store stays relocatable.
+
+    Returns
+    -------
+    Path
+        The ``link`` path.
+    """
+    link = Path(link)
+    rel_target = Path(rel_target)
+    # Unique temp name in the link's own dir: PID-scoped so parallel builds
+    # of *different* layers never collide, plus the target name for a same-PID
+    # sandbox. The temp is always unlinked+replaced, so staleness is harmless.
+    tmp = link.parent / f".{link.name}.tmp.{os.getpid()}.{rel_target.name}"
+    if tmp.is_symlink() or tmp.exists():
+        tmp.unlink()
+    tmp.symlink_to(rel_target)
+    # os.replace on a symlink path performs an atomic rename.
+    os.replace(tmp, link)
+    return link
+
+
 @supports_return_as
 def point_latest(root: str | Path, layer: str, ts: str) -> Path:
     """Point the layer ``latest`` symlink at the ``(layer, ts)`` build.
@@ -196,16 +228,8 @@ def point_latest(root: str | Path, layer: str, ts: str) -> Path:
     if not ap.sif.exists():
         raise FileNotFoundError(f"Build artifact not found: {ap.sif}")
 
-    link = ap.latest_symlink
     rel_target = Path(layer) / f"{layer}-{ts}.sif"
-    tmp = root / f".{layer}.sif.tmp.{ts}"
-    if tmp.is_symlink() or tmp.exists():
-        tmp.unlink()
-    tmp.symlink_to(rel_target)
-    # os.replace on a symlink path performs an atomic rename.
-    import os as _os
-
-    _os.replace(tmp, link)
+    link = atomic_symlink(ap.latest_symlink, rel_target)
     logger.info("Pointed %s.sif -> %s", layer, rel_target)
     return link
 

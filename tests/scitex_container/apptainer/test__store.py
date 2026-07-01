@@ -62,6 +62,58 @@ class TestArtifactPaths:
         assert ap.latest_symlink == tmp_path / "sac-base.sif"
 
 
+class TestAtomicSymlink:
+    """atomic_symlink — the SSOT safe-swap primitive."""
+
+    def test_creates_symlink_at_link_path(self, tmp_path):
+        # Arrange
+        s = _store()
+        (tmp_path / "target.sif").write_bytes(b"x")
+        link = tmp_path / "latest.sif"
+        # Act
+        s.atomic_symlink(link, "target.sif")
+        # Assert
+        assert link.is_symlink()
+
+    def test_target_written_verbatim(self, tmp_path):
+        # Arrange
+        s = _store()
+        link = tmp_path / "latest.sif"
+        # Act
+        s.atomic_symlink(link, Path("sub") / "target.sif")
+        # Assert
+        assert str(link.readlink()) == str(Path("sub") / "target.sif")
+
+    def test_replaces_existing_symlink(self, tmp_path):
+        # Arrange
+        s = _store()
+        link = tmp_path / "latest.sif"
+        s.atomic_symlink(link, "old.sif")
+        # Act
+        s.atomic_symlink(link, "new.sif")
+        # Assert
+        assert str(link.readlink()) == "new.sif"
+
+    def test_replaces_existing_real_file(self, tmp_path):
+        # Arrange — a pre-atomic-layout real file at the link path
+        s = _store()
+        link = tmp_path / "latest.sif"
+        link.write_bytes(b"real-file")
+        # Act
+        s.atomic_symlink(link, "new.sif")
+        # Assert
+        assert link.is_symlink() and str(link.readlink()) == "new.sif"
+
+    def test_no_leftover_temp_files(self, tmp_path):
+        # Arrange
+        s = _store()
+        link = tmp_path / "latest.sif"
+        # Act
+        s.atomic_symlink(link, "target.sif")
+        # Assert — the temp symlink was consumed by os.replace
+        assert list(tmp_path.glob(".*.tmp.*")) == []
+
+
 class TestPointLatest:
     """point_latest writes a relative symlink to the timestamped build."""
 
