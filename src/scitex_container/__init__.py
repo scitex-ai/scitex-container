@@ -30,15 +30,17 @@ def _compute_version() -> str:
         return "0.0.0+local"
 
 
-# Submodules exposed as `scitex_container.<name>`, imported on first access.
-_LAZY_SUBMODULES = ("apptainer", "docker", "host")
-
-# Public callable → (submodule, attribute-in-submodule). These mirror the
-# MCP tool surface so each `container_*` / `sandbox_*` / `docker_*` /
-# `host_*` tool maps to a top-level Python callable. One row per symbol
-# that would previously have been `from .X import Y`.
-# See _cli/audit/_summary/_mcp_audit.py §6.
-_LAZY_ATTRS: dict[str, tuple[str, str]] = {
+# Public name → (submodule, attribute-in-submodule). A None attribute means
+# the submodule itself is the exposed object (`scitex_container.apptainer`).
+# The callables mirror the MCP tool surface so each `container_*` /
+# `sandbox_*` / `docker_*` / `host_*` tool maps to a top-level Python
+# callable. One row per symbol that would previously have been
+# `from .X import Y`. See _cli/audit/_summary/_mcp_audit.py §6.
+_LAZY_ATTRS: dict[str, tuple[str, str | None]] = {
+    # submodules
+    "apptainer": ("apptainer", None),
+    "docker": ("docker", None),
+    "host": ("host", None),
     "env_snapshot": ("_snapshot", "env_snapshot"),
     # apptainer
     "build": ("apptainer", "build"),
@@ -70,24 +72,20 @@ def __getattr__(name: str):
         globals()["__version__"] = version  # cache
         return version
 
-    from importlib import import_module
-
-    if name in _LAZY_SUBMODULES:
-        mod = import_module(f".{name}", __name__)
-        globals()[name] = mod  # cache; subsequent access skips this hook
-        return mod
-
     entry = _LAZY_ATTRS.get(name)
     if entry is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
     submodule, attr = entry
-    value = getattr(import_module(f".{submodule}", __name__), attr)
-    globals()[name] = value  # cache
+    module = import_module(f".{submodule}", __name__)
+    value = module if attr is None else getattr(module, attr)
+    globals()[name] = value  # cache; subsequent access skips this hook
     return value
 
 
 def __dir__() -> list[str]:
-    return sorted(set(_LAZY_SUBMODULES) | set(_LAZY_ATTRS) | set(globals()))
+    return sorted(set(_LAZY_ATTRS) | set(globals()))
 
 
 __all__ = [
