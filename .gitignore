@@ -825,3 +825,8 @@ examples/demo_mcp_out/*
 !.scitex/dev/
 .scitex/dev/*
 !.scitex/dev/config.yaml
+
+# Agent runtime artifacts — never tracked (a pre-stop rescue autosave
+# once committed these; see chore/untrack-rescue-artifacts)
+.envrc
+.worktrees/
