@@ -12,9 +12,9 @@ import scitex_container.apptainer as apptainer
 ```
 
 See also:
-- [03_python-api-sandbox.md](03_python-api-sandbox.md) — sandbox management
-- [04_python-api-builders.md](04_python-api-builders.md) — SLURM / exec command builders
-- [05_python-api-docker-host.md](05_python-api-docker-host.md) — docker, host, top-level
+- [14_python-api-sandbox.md](14_python-api-sandbox.md) — sandbox management
+- [15_python-api-builders.md](15_python-api-builders.md) — SLURM / exec command builders
+- [16_python-api-docker-host.md](16_python-api-docker-host.md) — docker, host, top-level
 
 ---
 
@@ -28,12 +28,47 @@ apptainer.build(
     output_dir: str | Path | None = None,
     force: bool = False,
     sandbox: bool = False,
+    *,
+    def_path: str | Path | None = None,   # explicit .def path (bypasses lookup)
+    image_name: str | None = None,        # image/subdir stem (defaults to def stem)
+    use_sudo: bool = False,
+    fakeroot: bool | None = None,         # default: True for sandbox, False for SIF
+    cwd: str | Path | None = None,        # build context; defaults to output_dir
+    retain: int | None = None,            # previous SIFs kept for rollback
 ) -> Path
 ```
 
-Build an Apptainer SIF or sandbox directory from a `.def` file.
-Auto-detects containers dir. Auto-freezes lock files after SIF builds.
-Raises `FileNotFoundError` if `.def` not found; `RuntimeError` on build failure.
+Build an Apptainer SIF or sandbox directory from a `.def` file. This is
+the single safe-build entrypoint — it never overwrites a live image in
+place. Auto-detects the containers dir (or use `def_path`), auto-freezes
+lock files after SIF builds, and skips the rebuild when the recipe hash
+is unchanged (override with `force`). Raises `FileNotFoundError` if the
+`.def` is not found; `RuntimeError` on build failure.
+
+**Atomic build (SIF).** The image is built into a fresh timestamped
+`<output_dir>/<name>/<name>-<ts>.sif`; on success two stable symlinks are
+repointed atomically (temp symlink + `os.replace`):
+
+- `<output_dir>/<name>/<name>.sif` → the inner **boot path** consumers use
+- `<output_dir>/<name>.sif` → the top-level path for cross-layer
+  `From: ./<name>.sif` (`Bootstrap: localimage`) references
+
+A failed build raises **before** any swap, so the previous symlinks and
+their target stay intact (rollback = repoint at a retained older `<ts>`;
+see `list_builds`). Returns the resolved real `<name>-<ts>.sif`.
+
+**`cwd`** is the build context apptainer resolves the recipe's relative
+`%files` sources and `From: ./<other>.sif` against — settable
+independently of where the SIF lands (e.g. stage `%files` in one dir,
+publish the SIF in another). Defaults to `output_dir`.
+
+**`retain`** keeps that many *previous* timestamped SIFs (the live build
+is always kept, so `retain=N` leaves up to `N + 1` on disk); older ones
+are pruned after a successful build. Defaults to the image config's
+`retain`. SIF builds only.
+
+Sandbox builds (`sandbox=True`) are built in place (not atomically
+swappable) and still honour `cwd`.
 
 ### freeze
 
