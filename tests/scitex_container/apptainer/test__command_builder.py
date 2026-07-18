@@ -527,6 +527,130 @@ class TestBuildExecArgs:
         assert pwd_val.startswith("/home/alice")
 
 
+    # ---- overlay / fakeroot (SIF+overlay migration, Increment 1) ----
+
+    def test_default_output_is_byte_identical_golden(self):
+        """Defaults (overlay_path=None, fakeroot=False) must reproduce the
+        exact pre-change argv — the load-bearing safety invariant."""
+        # Arrange
+        expected = [
+            "apptainer",
+            "exec",
+            "--containall",
+            "--cleanenv",
+            "--writable-tmpfs",
+            "--hostname",
+            "scitex-cloud",
+            "--env",
+            "TERM=xterm-256color",
+            "--env",
+            "SCITEX_CLOUD=true",
+            "--env",
+            "SCITEX_PROJECT=myproject",
+            "--env",
+            "SCITEX_USER=alice",
+            "--env",
+            "USER=alice",
+            "--env",
+            "LOGNAME=alice",
+            "--env",
+            "SHELL=/bin/bash",
+            "--env",
+            "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
+            "--home",
+            "/home/alice:/home/alice",
+            "--bind",
+            "/data/proj/myproject:/home/alice/proj/myproject:rw",
+            "--pwd",
+            "/home/alice/proj/myproject",
+            "/opt/scitex/scitex.sif",
+        ]
+        # Act
+        result = self._call()
+        # Assert
+        assert result == expected
+
+    def test_default_has_writable_tmpfs(self):
+        # Arrange
+        # Act
+        result = self._call()
+        # Assert
+        assert "--writable-tmpfs" in result
+
+    def test_default_has_no_overlay(self):
+        # Arrange
+        # Act
+        result = self._call()
+        # Assert
+        assert "--overlay" not in result
+
+    def test_default_has_no_fakeroot(self):
+        # Arrange
+        # Act
+        result = self._call()
+        # Assert
+        assert "--fakeroot" not in result
+
+    def test_overlay_path_emits_adjacent_overlay_pair(self):
+        # Arrange
+        result = self._call(overlay_path="/x/ov.img")
+        # Act
+        idx = result.index("--overlay")
+        # Assert
+        assert result[idx : idx + 2] == ["--overlay", "/x/ov.img"]
+
+    def test_overlay_path_removes_writable_tmpfs(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img")
+        # Assert
+        assert "--writable-tmpfs" not in result
+
+    def test_overlay_path_accepts_path_object(self):
+        # Arrange
+        result = self._call(overlay_path=Path("/x/ov.img"))
+        # Act
+        idx = result.index("--overlay")
+        # Assert
+        assert result[idx + 1] == "/x/ov.img"
+
+    def test_fakeroot_positioned_right_after_exec(self):
+        # Arrange
+        # Act
+        result = self._call(fakeroot=True)
+        # Assert
+        assert result[:3] == ["apptainer", "exec", "--fakeroot"]
+
+    def test_fakeroot_positioned_before_containall(self):
+        # Arrange
+        result = self._call(fakeroot=True)
+        # Act
+        # Assert
+        assert result.index("--fakeroot") < result.index("--containall")
+
+    def test_combined_fakeroot_before_containall(self):
+        # Arrange
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Act
+        # Assert
+        assert result.index("--fakeroot") < result.index("--containall")
+
+    def test_combined_overlay_pair_present(self):
+        # Arrange
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Act
+        idx = result.index("--overlay")
+        # Assert
+        assert result[idx : idx + 2] == ["--overlay", "/x/ov.img"]
+
+    def test_combined_no_writable_tmpfs(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Assert
+        assert "--writable-tmpfs" not in result
+
+
     # ---- helpers ----
 
     @staticmethod
@@ -871,6 +995,27 @@ class TestBuildInstanceStartScript:
         # Assert
         assert container in result
 
+    def test_overlay_path_in_generated_script(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Assert
+        assert "--overlay /x/ov.img" in result
+
+    def test_fakeroot_in_generated_script(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Assert
+        assert "--fakeroot" in result
+
+    def test_pwd_stripped_with_overlay_fakeroot(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Assert
+        assert "--pwd" not in result
+
 
 # ---------------------------------------------------------------------------
 # build_srun_command
@@ -1006,6 +1151,28 @@ class TestBuildSrunCommand:
         # Act
         # Assert
         assert all(isinstance(t, str) for t in result)
+
+    def test_fakeroot_propagated_to_srun(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Assert
+        assert "--fakeroot" in result
+
+    def test_overlay_pair_propagated(self):
+        # Arrange
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Act
+        idx = result.index("--overlay")
+        # Assert
+        assert result[idx : idx + 2] == ["--overlay", "/x/ov.img"]
+
+    def test_overlay_removes_writable_tmpfs(self):
+        # Arrange
+        # Act
+        result = self._call(overlay_path="/x/ov.img", fakeroot=True)
+        # Assert
+        assert "--writable-tmpfs" not in result
 
 
 
