@@ -13,6 +13,10 @@ import logging
 from pathlib import Path
 
 from scitex_container._compat import supports_return_as
+from scitex_container.apptainer._shell_command import (
+    _build_shell_command,
+    build_shell_in_allocation_command as build_shell_in_allocation_command,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,15 +119,19 @@ def build_exec_args(
     dev_repos: list[dict] | None = None,
     host_mounts: list[dict] | None = None,
     texlive_prefix: str = "",
+    overlay_path: str | Path | None = None,
+    fakeroot: bool = False,
 ) -> list[str]:
     """Build the ``apptainer exec`` argument list.
 
     Handles:
 
     - Sandbox vs SIF detection. Both use ``--writable-tmpfs`` for user
-      sessions so each user gets a clean per-session tmpfs overlay.
+      sessions so each user gets a clean per-session tmpfs overlay. When
+      ``overlay_path`` is set, that persistent overlay replaces the
+      ephemeral tmpfs write layer.
     - For SIF images, ``--containall`` is added to prevent host mounts
-      leaking in.
+      leaking in. ``--fakeroot`` (when requested) precedes it.
     - Dev repo bind mounts.
     - PYTHONPATH injection for dev repos (src-layout).
     - Host package bind mounts (TeX Live, etc.).
@@ -147,6 +155,12 @@ def build_exec_args(
         Generic host mount dicts with ``host_path``, ``container_path``, ``mode``.
     texlive_prefix : str
         Host prefix for TeX Live (e.g. ``/usr``).
+    overlay_path : str | Path | None
+        Persistent per-user overlay image. When set, emits
+        ``--overlay <path>`` in place of ``--writable-tmpfs``.
+    fakeroot : bool
+        When ``True``, insert ``--fakeroot`` right after ``exec``
+        (before ``--containall``).
 
     Returns
     -------
@@ -170,13 +184,23 @@ def build_exec_args(
 
     args: list[str] = ["apptainer", "exec"]
 
+    # --fakeroot (when requested) must precede --containall
+    # (validated ordering on the NAS).
+    if fakeroot:
+        args.append("--fakeroot")
+
     # Always isolate — both SIF and sandbox need --containall
     # to prevent host filesystem leakage and ensure user isolation
     args.append("--containall")
 
+    # A persistent per-user overlay replaces the ephemeral tmpfs layer.
+    write_layer = (
+        ["--overlay", str(overlay_path)] if overlay_path else ["--writable-tmpfs"]
+    )
+
     args += [
         "--cleanenv",
-        "--writable-tmpfs",
+        *write_layer,
         "--hostname",
         "scitex-cloud",
         "--env",
@@ -226,6 +250,8 @@ def build_instance_start_script(
     dev_repos: list[dict] | None = None,
     host_mounts: list[dict] | None = None,
     texlive_prefix: str = "",
+    overlay_path: str | Path | None = None,
+    fakeroot: bool = False,
 ) -> str:
     """Build a bash script that starts an apptainer instance and keeps it alive.
 
@@ -256,6 +282,10 @@ def build_instance_start_script(
         Generic host mount dicts.
     texlive_prefix : str
         Host prefix for TeX Live.
+    overlay_path : str | Path | None
+        Passed through to ``build_exec_args`` (``--overlay <path>``).
+    fakeroot : bool
+        Passed through to ``build_exec_args`` (``--fakeroot``).
 
     Returns
     -------
@@ -272,6 +302,8 @@ def build_instance_start_script(
         dev_repos=dev_repos,
         host_mounts=host_mounts,
         texlive_prefix=texlive_prefix,
+        overlay_path=overlay_path,
+        fakeroot=fakeroot,
     )
     # exec_args = ["apptainer", "exec", "--containall", ..., container_path]
     # For instance start, we need the flags between "exec" and container_path,
@@ -363,65 +395,6 @@ def build_sbatch_command(
 
 
 @supports_return_as
-def build_shell_in_allocation_command(
-    job_id: str,
-    instance_name: str,
-    username: str = "",
-) -> list[str]:
-    """Build ``srun --overlap`` command to attach a shell inside an existing allocation.
-
-    Parameters
-    ----------
-    job_id : str
-        SLURM job ID of the running allocation.
-    instance_name : str
-        Name of the apptainer instance to exec into.
-    username : str
-        Username for the shell session (used for user identity setup).
-
-    Returns
-    -------
-    list[str]
-        Command list ready for ``os.execvpe`` or ``pty.fork``.
-    """
-    return [
-        "srun",
-        "--pty",
-        "--overlap",
-        f"--jobid={job_id}",
-        "apptainer",
-        "exec",
-        f"instance://{instance_name}",
-        *_build_shell_command(username),
-    ]
-
-
-def _build_shell_command(username: str) -> list[str]:
-    """Build shell entry command: fix user identity, cd to project dir, start bash."""
-    setup_script = (
-        # Fix user identity when running as root inside container
-        'if [ "$(id -u)" = "0" ] && [ -n "$USER" ] && [ "$USER" != "root" ]; then '
-        '  sed -i "s|^root:[^:]*:0:0:[^:]*:[^:]*:|$USER:x:0:0:$USER:/home/$USER:|" /etc/passwd 2>/dev/null; '
-        "fi; "
-        # Ensure HOME points to the user's home directory.
-        # apptainer exec instance:// inherits env from the calling process,
-        # which may have HOME set to the broker/Django process's home dir
-        # rather than the container user's home. Without this, bash -l
-        # looks for .bash_profile in the wrong directory and PS1 is never set.
-        'if [ -n "$USER" ]; then export HOME="/home/$USER"; fi; '
-        # cd to project dir (SCITEX_PROJECT is set by build_exec_args)
-        'if [ -n "$SCITEX_PROJECT" ] && [ -n "$USER" ]; then '
-        '  _proj="/home/$USER/proj/$SCITEX_PROJECT"; '
-        '  if [ -d "$_proj" ]; then cd "$_proj"; '
-        '  else echo "⚠ Project directory $_proj not found — project may have changed on SciTeX Cloud"; '
-        "  fi; "
-        "fi; "
-        "exec /bin/bash -l"
-    )
-    return ["/bin/bash", "-c", setup_script]
-
-
-@supports_return_as
 def build_srun_command(
     container_path: str,
     username: str,
@@ -431,6 +404,8 @@ def build_srun_command(
     dev_repos: list[dict] | None = None,
     host_mounts: list[dict] | None = None,
     texlive_prefix: str = "",
+    overlay_path: str | Path | None = None,
+    fakeroot: bool = False,
     slurm_partition: str = "compute",
     slurm_time_limit: str = "8:00:00",
     slurm_cpus: int = 4,
@@ -461,6 +436,10 @@ def build_srun_command(
         Generic host mount dicts.
     texlive_prefix : str
         Host prefix for TeX Live.
+    overlay_path : str | Path | None
+        Passed through to ``build_exec_args`` (``--overlay <path>``).
+    fakeroot : bool
+        Passed through to ``build_exec_args`` (``--fakeroot``).
     slurm_partition : str
         SLURM partition name.
     slurm_time_limit : str
@@ -486,6 +465,8 @@ def build_srun_command(
         dev_repos=dev_repos,
         host_mounts=host_mounts,
         texlive_prefix=texlive_prefix,
+        overlay_path=overlay_path,
+        fakeroot=fakeroot,
     )
 
     cmd = [
