@@ -16,6 +16,8 @@ tests to ``test__verify_gate.py``.
 
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -51,7 +53,8 @@ def recording_build():
     about argument routing must not depend on whether the machine can run
     containers at all.
     """
-    from scitex_container.apptainer import _lockgen, _reproducible as r
+    from scitex_container.apptainer import _lockgen
+    from scitex_container.apptainer import _reproducible as r
 
     calls: list[dict] = []
 
@@ -79,6 +82,21 @@ def recording_build():
     finally:
         r._build = saved_build
         r.capture_lock = saved_capture
+
+
+@pytest.fixture
+def cross_device_target(tmp_path):
+    """Provide writable storage on a device different from ``tmp_path``."""
+    shared_memory = Path("/dev/shm")
+    if not shared_memory.is_dir() or not os.access(shared_memory, os.W_OK):
+        pytest.skip("a writable second filesystem is unavailable")
+    with tempfile.TemporaryDirectory(
+        prefix="scitex-container-", dir=shared_memory
+    ) as target_name:
+        target_dir = Path(target_name)
+        if tmp_path.stat().st_dev == target_dir.stat().st_dev:
+            pytest.skip("test source and destination are on the same filesystem")
+        yield target_dir
 
 
 class TestRoughBuildForwardsCwd:
@@ -127,6 +145,32 @@ class TestRoughBuildForwardsCwd:
         # Assert
         assert recording_build[0]["cwd"] is None
 
+    def test_builds_on_symlinked_canonical_filesystem(
+        self, tmp_path, recording_build, cross_device_target
+    ):
+        # Arrange
+        r = _repro()
+        root = tmp_path / "containers"
+        root.mkdir()
+        (root / "base").symlink_to(cross_device_target, target_is_directory=True)
+        canonical = root / "base" / "base-2026-0812-100000.sif"
+
+        # Act
+        r._rough_build(
+            layer="base",
+            ts="2026-0812-100000",
+            root=root,
+            canonical_sif=canonical,
+            build_log=root / "base" / "base-2026-0812-100000.build.log",
+            def_path=None,
+            def_name="base",
+            force=False,
+        )
+
+        # Assert
+        observed = (recording_build[0]["output_dir"], canonical.read_bytes())
+        assert observed == (cross_device_target.resolve(), b"fake-sif")
+
 
 class TestVerifyRoundtripForwardsCwd:
     """The replay must use the SAME build context as the rough build.
@@ -152,6 +196,27 @@ class TestVerifyRoundtripForwardsCwd:
         r.verify_roundtrip("base", tmp_path, "2026-0812-100000", cwd=staging)
         # Assert
         assert recording_build[0]["cwd"] == staging
+
+    def test_rebuilds_on_symlinked_canonical_filesystem(
+        self, tmp_path, recording_build, cross_device_target
+    ):
+        # Arrange
+        r = _repro()
+        from scitex_container.apptainer import _store as s
+
+        root = tmp_path / "containers"
+        root.mkdir()
+        (root / "base").symlink_to(cross_device_target, target_is_directory=True)
+        ap = s.artifact_paths(root, "base", "2026-0812-100000")
+        ap.sif.write_bytes(b"fake-sif")
+        ap.locked_def.write_text("Bootstrap: docker\nFrom: alpine:3.19\n")
+        ap.lock.write_text("# scitex-container lock\n[pip]\n[dpkg]\n[node]\n")
+
+        # Act
+        r.verify_roundtrip("base", root, "2026-0812-100000")
+
+        # Assert
+        assert recording_build[0]["output_dir"] == cross_device_target.resolve()
 
 
 class TestBuildReproduciblePublishesBothSymlinks:
@@ -261,6 +326,32 @@ class TestPreserveBuildLog:
         r._preserve_build_log(tmp_path / "absent", "base-ts", canonical)
         # Assert
         assert not canonical.exists()
+
+
+class TestRelocateFileAcrossDevices:
+    """Canonical artifact directories may be symlinks onto scratch storage."""
+
+    def test_installs_through_cross_device_symlink(
+        self, tmp_path, cross_device_target
+    ):
+        # Arrange
+        r = _repro()
+        source = tmp_path / "rough.sif"
+        source.write_bytes(b"complete-sif")
+        canonical_parent = tmp_path / "canonical"
+        canonical_parent.symlink_to(cross_device_target, target_is_directory=True)
+        destination = canonical_parent / "base.sif"
+
+        # Act
+        r._relocate_file(source, destination)
+
+        # Assert
+        observed = (
+            destination.read_bytes(),
+            source.exists(),
+            list(cross_device_target.glob(".base.sif.*.tmp")),
+        )
+        assert observed == (b"complete-sif", False, [])
 
 
 # EOF

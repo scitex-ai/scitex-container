@@ -34,8 +34,11 @@ injection); it never reads a consumer's config location.
 
 from __future__ import annotations
 
+import errno
 import logging
 import os
+import shutil
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -60,7 +63,7 @@ logger = logging.getLogger(__name__)
 # module's WRITE side, run once per build. Re-exported here so the
 # long-standing ``from ._reproducible import check_verified`` keeps
 # resolving.
-from ._verify_gate import (  # noqa: E402,F401  (deliberate re-export)
+from ._verify_gate import (  # noqa: F401  (deliberate re-export)
     VerifyError,
     VerifyStatus,
     check_verified,
@@ -257,13 +260,15 @@ def _rough_build(
     """Run the loose (rough) build, relocate into the timestamped slot.
 
     Builds via ``_build.build`` with ``image_name=<layer>-<ts>`` so the
-    artifact lands in a scratch dir-per-image at
-    ``<root>/<layer>-<ts>/<layer>-<ts>.sif``, then moves the SIF into the
-    canonical ``<root>/<layer>/<layer>-<ts>.sif`` slot and removes the
-    scratch dir + the stray top-level ``<root>/<layer>-<ts>.sif`` symlink
-    that ``_build`` writes for cross-layer lookups. The scratch
-    auto-freeze locks are discarded — the reproducible store captures its
-    own combined ``.lock`` (step 2).
+    artifact lands in a scratch dir-per-image on the canonical layer's
+    physical filesystem, then moves the SIF into the canonical
+    ``<root>/<layer>/<layer>-<ts>.sif`` slot and removes the scratch dir +
+    stray symlink that ``_build`` writes for cross-layer lookups. Locating
+    scratch beneath ``canonical_sif.parent.resolve()`` is essential when
+    ``<root>/<layer>`` is a symlink to large scratch storage: the multi-GB
+    rough image must never be written to the smaller filesystem hosting
+    ``root``. The scratch auto-freeze locks are discarded — the reproducible
+    store captures its own combined ``.lock`` (step 2).
 
     The rough build's log (which ``_build`` writes into the scratch dir
     as ``<scratch>/<scratch>.build-<inner-ts>.log``, where ``<inner-ts>``
@@ -276,12 +281,12 @@ def _rough_build(
     Path
         The canonical SIF path (``canonical_sif``).
     """
-    import shutil
-
     scratch_name = f"{layer}-{ts}"
+    canonical_sif.parent.mkdir(parents=True, exist_ok=True)
+    build_root = canonical_sif.parent.resolve()
     scratch_sif = _build(
         def_name=def_name or scratch_name,
-        output_dir=root,
+        output_dir=build_root,
         force=force,
         sandbox=False,
         def_path=def_path,
@@ -290,12 +295,9 @@ def _rough_build(
     )
     scratch_sif = Path(scratch_sif)
 
-    canonical_sif.parent.mkdir(parents=True, exist_ok=True)
-    if canonical_sif.exists():
-        canonical_sif.unlink()
-    os.replace(scratch_sif, canonical_sif)
+    _relocate_file(scratch_sif, canonical_sif)
 
-    scratch_dir = root / scratch_name
+    scratch_dir = build_root / scratch_name
 
     # Preserve the rough build log into the canonical slot before the
     # scratch dir is removed (otherwise rmtree loses it). _build names
@@ -306,18 +308,51 @@ def _rough_build(
     # Clean the scratch dir-per-image and the stray top-level symlink.
     if scratch_dir.is_dir():
         shutil.rmtree(scratch_dir, ignore_errors=True)
-    stray_link = root / f"{scratch_name}.sif"
-    if stray_link.is_symlink() or stray_link.exists():
+    stray_link = build_root / f"{scratch_name}.sif"
+    # In a canonical-local build the top-level link occupies the eventual
+    # canonical filename. ``_relocate_file`` replaces that link with the
+    # completed regular file, which must not be removed here.
+    if stray_link.is_symlink():
         try:
             stray_link.unlink()
         except OSError:
             pass
-    # _build auto-freezes into ``output_dir`` (= root) WITHOUT host
+    # _build auto-freezes into ``output_dir`` (= build_root) WITHOUT host
     # isolation, leaving host-bleed lock files we never use (step 2
     # captures our own isolated combined lock). Discard them.
-    _discard_stray_locks(root)
+    _discard_stray_locks(build_root)
 
     return canonical_sif
+
+
+def _relocate_file(source: Path, destination: Path) -> None:
+    """Atomically install ``source`` at ``destination``, including across devices.
+
+    ``os.replace`` is atomic but cannot cross filesystem boundaries. Artifact stores
+    commonly expose a scratch-backed layer directory through a symlink beneath a
+    home-backed root, so the build scratch file and canonical file can legitimately
+    have different devices. In that case, copy into a temporary sibling of the
+    destination, atomically publish the completed copy, then remove the source.
+    """
+    try:
+        os.replace(source, destination)
+        return
+    except OSError as error:
+        if error.errno != errno.EXDEV:
+            raise
+
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent
+    )
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    try:
+        shutil.copy2(source, temporary)
+        os.replace(temporary, destination)
+        source.unlink()
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def _preserve_build_log(scratch_dir: Path, scratch_name: str, build_log: Path) -> None:
@@ -335,9 +370,7 @@ def _preserve_build_log(scratch_dir: Path, scratch_name: str, build_log: Path) -
         return
     newest = logs[-1]
     build_log.parent.mkdir(parents=True, exist_ok=True)
-    if build_log.exists():
-        build_log.unlink()
-    os.replace(newest, build_log)
+    _relocate_file(newest, build_log)
 
 
 def _discard_stray_locks(root: Path) -> None:
@@ -397,7 +430,8 @@ def verify_roundtrip(
     rough_lock = read_lock(ap.lock)
 
     verify_name = f"{layer}-{ts}-verify"
-    verify_scratch = root / verify_name
+    build_root = ap.layer_dir.resolve()
+    verify_scratch = build_root / verify_name
     # The rebuild's lock is a throwaway — captured only to compare against
     # the rough lock, then deleted in the finally below (it would otherwise
     # leave a stray <layer>-<ts>.verify.lock beside the kept artifacts).
@@ -405,7 +439,7 @@ def verify_roundtrip(
     try:
         verify_sif = _build(
             def_name=verify_name,
-            output_dir=root,
+            output_dir=build_root,
             force=True,
             sandbox=False,
             def_path=ap.locked_def,
@@ -416,7 +450,7 @@ def verify_roundtrip(
         diff = compare_locks(rough_lock, rebuild_lock)
     finally:
         # Auto-delete the throwaway verify SIF + its scratch dir + symlink.
-        _cleanup_verify(root, verify_name, verify_scratch)
+        _cleanup_verify(build_root, verify_name, verify_scratch)
         # Delete the throwaway rebuild lock — it was only needed for the
         # version-set compare above; the kept lock is the rough one.
         if verify_lock_path.is_file():
