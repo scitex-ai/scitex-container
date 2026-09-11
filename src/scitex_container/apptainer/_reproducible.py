@@ -17,8 +17,9 @@ The round-trip (operator-approved core):
    - mismatch → **fail loud**: mark ``.unverified`` with the drift diff;
      NOT a build failure (the rough SIF stays usable). Never a silent
      pass.
-   The verify SIF is auto-deleted after the compare; the canonical kept
-   artifact is the rough SIF + its lock + its locked def + the marker.
+   The verify SIF is auto-deleted after the compare; a failed verify log is
+   preserved beside the canonical artifacts. Stable boot symlinks move to the
+   rough SIF only after verification succeeds.
 
 Byte-identical (``SOURCE_DATE_EPOCH``) is an OPTIONAL stretch, deliberately
 NOT the default gate — version-set identity is the meaningful guarantee
@@ -111,8 +112,8 @@ def build_reproducible(
     The operator design specifies steps 4-5 run BACKGROUND-by-default in
     the CLI; this function exposes the synchronous primitive that a
     caller (CLI/MCP) backgrounds. ``verify=False`` skips them entirely
-    (leaving the build unmarked) so a caller can schedule the verify
-    rebuild as a detached job and call ``verify_roundtrip`` later.
+    (leaving the build unmarked and unpublished) so a caller can schedule
+    the verify rebuild as a detached job and call ``verify_roundtrip`` later.
 
     Parameters
     ----------
@@ -125,7 +126,8 @@ def build_reproducible(
     def_name : str, optional
         Name of the ``.def`` to look up via ``find_containers_dir``.
     verify : bool
-        Run steps 4-5 inline. False = skip (build stays unmarked).
+        Run steps 4-5 inline. False = skip; the build stays unmarked and
+        neither stable symlink moves until a later successful verification.
     keep : bool
         Write the ``.keep`` prune-protect marker on the build.
     config : ImageConfig, optional
@@ -190,21 +192,8 @@ def build_reproducible(
     # --- Step 3: generate locked def ----------------------------------
     generate_locked_def(resolved_rough_def, rough_lock, ap.locked_def)
 
-    # Publish the freshly-built rough artifact through BOTH stable
-    # symlinks. This used to call ``point_latest``, which writes only the
-    # TOP-level ``<root>/<layer>.sif`` — leaving the INNER
-    # ``<root>/<layer>/<layer>.sif`` boot path still resolving to the
-    # PREVIOUS build. A consumer that boots off the inner path (as
-    # scitex-agent-container's runtime does) would then run the OLD image
-    # while the store claimed the new one was live: a reproducible build
-    # nobody ever ran.
-    _store.publish(root, layer, ts)
-
     if keep:
         _store.protect(root, layer, ts)
-
-    # Prune older builds per retain.
-    _store.prune(root, layer, cfg.retain)
 
     result = RoundTripResult(
         layer=layer,
@@ -216,11 +205,13 @@ def build_reproducible(
     )
 
     if not verify:
-        logger.info("Skipping round-trip verify (verify=False); build is unmarked")
+        logger.info(
+            "Verification pending (verify=False); build is unmarked and unpublished"
+        )
         return result
 
     # --- Steps 4-5: verify rebuild + compare --------------------------
-    diff = verify_roundtrip(layer, root, ts, cwd=cwd)
+    diff = verify_roundtrip(layer, root, ts, cwd=cwd, config=cfg)
     result.verified = diff.identical
     result.diff = diff
     return result
@@ -355,7 +346,9 @@ def _relocate_file(source: Path, destination: Path) -> None:
             temporary.unlink()
 
 
-def _preserve_build_log(scratch_dir: Path, scratch_name: str, build_log: Path) -> None:
+def _preserve_build_log(
+    scratch_dir: Path, scratch_name: str, build_log: Path
+) -> Path | None:
     """Relocate _build's rough log out of the scratch dir into ``build_log``.
 
     _build writes ``<scratch_dir>/<scratch_name>.build-<inner-ts>.log``
@@ -364,13 +357,14 @@ def _preserve_build_log(scratch_dir: Path, scratch_name: str, build_log: Path) -
     Silently no-ops if no log is found (e.g. an up-to-date skip-rebuild).
     """
     if not scratch_dir.is_dir():
-        return
+        return None
     logs = sorted(scratch_dir.glob(f"{scratch_name}.build-*.log"))
     if not logs:
-        return
+        return None
     newest = logs[-1]
     build_log.parent.mkdir(parents=True, exist_ok=True)
     _relocate_file(newest, build_log)
+    return build_log
 
 
 def _discard_stray_locks(root: Path) -> None:
@@ -388,6 +382,7 @@ def verify_roundtrip(
     ts: str,
     *,
     cwd: str | Path | None = None,
+    config: ImageConfig | None = None,
 ) -> LockDiff:
     """Rebuild from the locked def, compare version sets, mark the build.
 
@@ -397,9 +392,10 @@ def verify_roundtrip(
     1. rebuilds from ``<layer>-<ts>.def`` into a throwaway verify SIF,
     2. captures the rebuild's lock (a throwaway ``.verify.lock``),
     3. compares against the rough lock,
-    4. marks ``.verified`` (identical) or ``.unverified`` (drift, loud),
-    5. deletes the throwaway verify SIF + its scratch dir + the
-       ``.verify.lock``.
+    4. marks ``.verified`` and publishes both stable links only when identical,
+       or marks ``.unverified`` without changing the live links,
+    5. deletes the throwaway verify SIF + its scratch dir + ``.verify.lock``;
+       on failure, first preserves its build log beside the rough artifacts.
 
     Parameters
     ----------
@@ -414,6 +410,8 @@ def verify_roundtrip(
         the rough build used — the locked def is the rough def plus a pin
         stanza, so it carries the identical relative ``%files`` /
         ``From:`` references and resolves them the same way or not at all.
+    config : ImageConfig, optional
+        Resolved retention config. Loaded from ``root`` when omitted.
 
     Returns
     -------
@@ -448,6 +446,21 @@ def verify_roundtrip(
         )
         rebuild_lock = capture_lock(verify_sif, verify_lock_path)
         diff = compare_locks(rough_lock, rebuild_lock)
+    except Exception as error:
+        failure_log = _preserve_verification_failure(
+            root=root,
+            layer=layer,
+            ts=ts,
+            verify_scratch=verify_scratch,
+            verify_name=verify_name,
+            error=error,
+        )
+        if failure_log is not None:
+            raise RuntimeError(
+                f"Verification rebuild failed; diagnostic log preserved at "
+                f"{failure_log}"
+            ) from error
+        raise
     finally:
         # Auto-delete the throwaway verify SIF + its scratch dir + symlink.
         _cleanup_verify(build_root, verify_name, verify_scratch)
@@ -456,22 +469,51 @@ def verify_roundtrip(
         if verify_lock_path.is_file():
             verify_lock_path.unlink()
 
-    if diff.identical:
-        _store.mark_verified(root, layer, ts)
-        logger.info("Round-trip VERIFIED for %s-%s", layer, ts)
-    else:
-        reason = diff.summary()
-        _store.mark_unverified(root, layer, ts, reason=reason)
-        # Fail loud — but NOT a build failure: the rough SIF stays usable.
-        logger.error(
-            "Round-trip MISMATCH for %s-%s: %s. Marked .unverified "
-            "(rough SIF stays usable; reproducibility unproven).",
-            layer,
-            ts,
-            reason,
-        )
+    cfg = config or load_config(root)
+    _finalize_verification(root, layer, ts, diff, retain=cfg.retain)
 
     return diff
+
+
+def _preserve_verification_failure(
+    *,
+    root: Path,
+    layer: str,
+    ts: str,
+    verify_scratch: Path,
+    verify_name: str,
+    error: Exception,
+) -> Path | None:
+    """Preserve a failed rebuild log and mark its rough artifact unverified."""
+    ap = _store.artifact_paths(root, layer, ts)
+    preserved = _preserve_build_log(verify_scratch, verify_name, ap.verify_build_log)
+    reason = f"verification failed: {type(error).__name__}: {error}"
+    if preserved is not None:
+        reason += f"; diagnostic log: {preserved}"
+    _store.mark_unverified(root, layer, ts, reason=reason)
+    return preserved
+
+
+def _finalize_verification(
+    root: Path, layer: str, ts: str, diff: LockDiff, *, retain: int
+) -> None:
+    """Record verification and publish only a proven-identical artifact."""
+    if diff.identical:
+        _store.mark_verified(root, layer, ts)
+        _store.publish(root, layer, ts)
+        _store.prune(root, layer, retain)
+        logger.info("Round-trip VERIFIED and published for %s-%s", layer, ts)
+        return
+
+    reason = diff.summary()
+    _store.mark_unverified(root, layer, ts, reason=reason)
+    logger.error(
+        "Round-trip MISMATCH for %s-%s: %s. Marked .unverified and left "
+        "stable symlinks unchanged.",
+        layer,
+        ts,
+        reason,
+    )
 
 
 def _cleanup_verify(root: Path, verify_name: str, verify_scratch: Path) -> None:

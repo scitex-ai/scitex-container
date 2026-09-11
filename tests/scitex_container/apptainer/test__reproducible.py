@@ -219,15 +219,10 @@ class TestVerifyRoundtripForwardsCwd:
         assert recording_build[0]["output_dir"] == cross_device_target.resolve()
 
 
-class TestBuildReproduciblePublishesBothSymlinks:
-    """A published round-trip build must be the one that actually boots.
+class TestBuildReproduciblePublicationGate:
+    """Only a verified round-trip may replace the stable boot links."""
 
-    ``point_latest`` writes only the TOP link; runtimes boot off the INNER
-    ``<layer>/<layer>.sif``. Publishing one without the other leaves the
-    store advertising a build nobody runs.
-    """
-
-    def test_inner_boot_symlink_points_at_the_new_build(
+    def test_pending_build_does_not_create_inner_boot_symlink(
         self, tmp_path, recording_build
     ):
         # Arrange
@@ -235,14 +230,14 @@ class TestBuildReproduciblePublishesBothSymlinks:
         def_path = tmp_path / "base.def"
         def_path.write_text("Bootstrap: docker\nFrom: alpine:3.19\n")
         # Act
-        res = r.build_reproducible(
+        r.build_reproducible(
             layer="base", root=tmp_path, def_path=def_path, verify=False
         )
         # Assert
         inner = tmp_path / "base" / "base.sif"
-        assert inner.resolve() == res.sif.resolve()
+        assert inner.exists() is False
 
-    def test_top_level_symlink_points_at_the_new_build(
+    def test_pending_build_does_not_create_top_level_symlink(
         self, tmp_path, recording_build
     ):
         # Arrange
@@ -250,11 +245,113 @@ class TestBuildReproduciblePublishesBothSymlinks:
         def_path = tmp_path / "base.def"
         def_path.write_text("Bootstrap: docker\nFrom: alpine:3.19\n")
         # Act
-        res = r.build_reproducible(
+        r.build_reproducible(
             layer="base", root=tmp_path, def_path=def_path, verify=False
         )
         # Assert
-        assert (tmp_path / "base.sif").resolve() == res.sif.resolve()
+        assert (tmp_path / "base.sif").exists() is False
+
+    def test_verified_build_publishes_inner_boot_symlink(
+        self, tmp_path, recording_build
+    ):
+        # Arrange
+        r = _repro()
+        def_path = tmp_path / "base.def"
+        def_path.write_text("Bootstrap: docker\nFrom: alpine:3.19\n")
+        # Act
+        result = r.build_reproducible(
+            layer="base", root=tmp_path, def_path=def_path, verify=True
+        )
+        # Assert
+        assert (tmp_path / "base" / "base.sif").resolve() == result.sif.resolve()
+
+    def test_verified_build_publishes_top_level_symlink(
+        self, tmp_path, recording_build
+    ):
+        # Arrange
+        r = _repro()
+        def_path = tmp_path / "base.def"
+        def_path.write_text("Bootstrap: docker\nFrom: alpine:3.19\n")
+        # Act
+        result = r.build_reproducible(
+            layer="base", root=tmp_path, def_path=def_path, verify=True
+        )
+        # Assert
+        assert (tmp_path / "base.sif").resolve() == result.sif.resolve()
+
+
+class TestVerificationFailureSafety:
+    """Failure evidence survives while the live image remains unchanged."""
+
+    def test_mismatch_keeps_both_stable_links_on_previous_build(self, tmp_path):
+        # Arrange
+        r = _repro()
+        from scitex_container.apptainer import _lockgen, _store
+
+        old = _store.artifact_paths(tmp_path, "base", "2026-0812-100000")
+        new = _store.artifact_paths(tmp_path, "base", "2026-0812-110000")
+        old.layer_dir.mkdir(parents=True)
+        old.sif.write_bytes(b"old")
+        new.sif.write_bytes(b"new")
+        _store.publish(tmp_path, "base", old.ts)
+        diff = _lockgen.LockDiff(
+            identical=False, changed={"python": ("3.11", "3.12")}
+        )
+
+        # Act
+        r._finalize_verification(tmp_path, "base", new.ts, diff, retain=3)
+
+        # Assert
+        observed = (
+            (tmp_path / "base.sif").resolve(),
+            (tmp_path / "base" / "base.sif").resolve(),
+            new.unverified_marker.exists(),
+        )
+        assert observed == (old.sif.resolve(), old.sif.resolve(), True)
+
+    def test_failed_rebuild_log_survives_verify_scratch_cleanup(self, tmp_path):
+        # Arrange
+        r = _repro()
+        from scitex_container.apptainer import _store
+
+        ap = _store.artifact_paths(tmp_path, "base", "2026-0812-110000")
+        ap.layer_dir.mkdir(parents=True)
+        previous = _store.artifact_paths(tmp_path, "base", "2026-0812-100000")
+        previous.sif.write_bytes(b"previous")
+        ap.sif.write_bytes(b"candidate")
+        _store.publish(tmp_path, "base", previous.ts)
+        verify_name = "base-2026-0812-110000-verify"
+        verify_scratch = ap.layer_dir / verify_name
+        verify_scratch.mkdir()
+        source_log = verify_scratch / f"{verify_name}.build-2026-0812-120000.log"
+        source_log.write_text("FATAL: reproducible verification failed\n")
+
+        # Act
+        preserved = r._preserve_verification_failure(
+            root=tmp_path,
+            layer="base",
+            ts=ap.ts,
+            verify_scratch=verify_scratch,
+            verify_name=verify_name,
+            error=RuntimeError("exit 255"),
+        )
+        r._cleanup_verify(ap.layer_dir, verify_name, verify_scratch)
+
+        # Assert
+        observed = (
+            preserved.read_text() if preserved is not None else None,
+            verify_scratch.exists(),
+            "exit 255" in ap.unverified_marker.read_text(),
+            (tmp_path / "base.sif").resolve(),
+            (tmp_path / "base" / "base.sif").resolve(),
+        )
+        assert observed == (
+            "FATAL: reproducible verification failed\n",
+            False,
+            True,
+            previous.sif.resolve(),
+            previous.sif.resolve(),
+        )
 
 
 class TestPreserveBuildLog:
