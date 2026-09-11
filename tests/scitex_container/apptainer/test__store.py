@@ -338,6 +338,18 @@ class TestPrune:
         # Assert
         assert not (tmp_path / "base" / "base-2026-0524-100000.lock").exists()
 
+    def test_prune_deletes_preserved_verify_build_log(self, tmp_path):
+        # Arrange
+        s = _store()
+        _make_build(tmp_path, "base", "2026-0524-100000")
+        _make_build(tmp_path, "base", "2026-0524-100001")
+        old = s.artifact_paths(tmp_path, "base", "2026-0524-100000")
+        old.verify_build_log.write_text("failed verify\n")
+        # Act
+        s.prune(tmp_path, "base", retain=1)
+        # Assert
+        assert old.verify_build_log.exists() is False
+
     def test_no_prune_when_under_retain(self, tmp_path):
         # Arrange
         s = _store()

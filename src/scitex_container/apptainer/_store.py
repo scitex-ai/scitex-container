@@ -14,6 +14,7 @@ Artifact layout (per the operator-approved design)::
         ├── <layer>-<ts>.verified    # OR .unverified (round-trip result)
         ├── <layer>-<ts>.keep        # optional: prune-protect dotfile
         ├── <layer>-<ts>.build.log
+        ├── <layer>-<ts>.verify.build.log  # preserved only on verify failure
         └── ... older <ts> sets (pruned to retain N)
 
 The ``<ts>`` correspondence between the SIF and its lock is the
@@ -44,7 +45,7 @@ _TS_RE = r"\d{4}-\d{4}-\d{6}"
 
 def timestamp() -> str:
     """Return a fresh build timestamp string (``YYYY-MMDD-HHMMSS``)."""
-    return _dt.datetime.now().strftime("%Y-%m%d-%H%M%S")
+    return _dt.datetime.now().astimezone().strftime("%Y-%m%d-%H%M%S")
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,10 @@ class ArtifactPaths:
     @property
     def build_log(self) -> Path:
         return self.layer_dir / f"{self.layer}-{self.ts}.build.log"
+
+    @property
+    def verify_build_log(self) -> Path:
+        return self.layer_dir / f"{self.layer}-{self.ts}.verify.build.log"
 
     @property
     def latest_symlink(self) -> Path:
@@ -325,6 +330,7 @@ def _remove_build(root: Path, layer: str, ts: str) -> None:
         ap.unverified_marker,
         ap.keep_marker,
         ap.build_log,
+        ap.verify_build_log,
     ):
         if p.is_file() or p.is_symlink():
             logger.info("Pruning %s", p.name)
@@ -339,7 +345,7 @@ def mark_verified(root: str | Path, layer: str, ts: str) -> Path:
     if ap.unverified_marker.exists():
         ap.unverified_marker.unlink()
     ap.verified_marker.write_text(
-        f"round-trip verified at {_dt.datetime.now().isoformat()}\n"
+        f"round-trip verified at {_dt.datetime.now().astimezone().isoformat()}\n"
     )
     return ap.verified_marker
 
@@ -355,7 +361,8 @@ def mark_unverified(root: str | Path, layer: str, ts: str, reason: str = "") -> 
     ap = artifact_paths(root, layer, ts)
     if ap.verified_marker.exists():
         ap.verified_marker.unlink()
-    body = f"reproducibility unverified at {_dt.datetime.now().isoformat()}\n"
+    now = _dt.datetime.now().astimezone().isoformat()
+    body = f"reproducibility unverified at {now}\n"
     if reason:
         body += reason.rstrip("\n") + "\n"
     ap.unverified_marker.write_text(body)
