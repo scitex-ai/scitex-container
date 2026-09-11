@@ -20,9 +20,14 @@ def _lockgen():
     return lg
 
 
-def _make_lock(pip=None, dpkg=None, node=""):
+def _make_lock(pip=None, dpkg=None, node="", pip_executable=""):
     lg = _lockgen()
-    return lg.Lock(pip=pip or {}, dpkg=dpkg or {}, node=node)
+    return lg.Lock(
+        pip=pip or {},
+        dpkg=dpkg or {},
+        node=node,
+        pip_executable=pip_executable,
+    )
 
 
 class TestVersionSet:
@@ -109,6 +114,17 @@ class TestWriteReadRoundTrip:
         # Assert
         assert "[pip]" in path.read_text()
 
+    def test_pip_executable_survives_round_trip(self, tmp_path):
+        # Arrange
+        lg = _lockgen()
+        lock = _make_lock(pip_executable="/opt/venv-sac/bin/pip")
+        path = tmp_path / "x.lock"
+        lg.write_lock(lock, path)
+        # Act
+        reloaded = lg.read_lock(path)
+        # Assert
+        assert reloaded.pip_executable == "/opt/venv-sac/bin/pip"
+
 
 class TestGenerateLockedDef:
     """generate_locked_def emits a pinned %post stanza."""
@@ -161,6 +177,34 @@ class TestGenerateLockedDef:
         # Assert
         assert "scitex-container: pinned pip versions" in out.read_text()
 
+    def test_locked_def_does_not_uninstall_distro_owned_packages(
+        self, tmp_path, rough_def
+    ):
+        # Arrange: pyparsing is installed by apt in Ubuntu base images and
+        # therefore has no pip RECORD file to support uninstallation.
+        lg = _lockgen()
+        lock = _make_lock(pip={"pyparsing": "3.3.2"})
+        out = tmp_path / "locked.def"
+        # Act
+        lg.generate_locked_def(rough_def, lock, out)
+        # Assert
+        assert '"$_pip" install --ignore-installed --no-deps' in out.read_text()
+
+    def test_locked_def_replays_into_captured_pip_environment(
+        self, tmp_path, rough_def
+    ):
+        # Arrange
+        lg = _lockgen()
+        lock = _make_lock(
+            pip={"pyparsing": "3.3.2"},
+            pip_executable="/opt/venv-sac/bin/pip",
+        )
+        out = tmp_path / "locked.def"
+        # Act
+        lg.generate_locked_def(rough_def, lock, out)
+        # Assert
+        assert "_pip=/opt/venv-sac/bin/pip" in out.read_text()
+
 
 class TestCompareLocks:
     """compare_locks — the round-trip gate."""
@@ -170,6 +214,18 @@ class TestCompareLocks:
         lg = _lockgen()
         a = _make_lock(pip={"numpy": "2.1.0"}, dpkg={"libc6": "2.39"})
         b = _make_lock(pip={"numpy": "2.1.0"}, dpkg={"libc6": "2.39"})
+        # Act
+        diff = lg.compare_locks(a, b)
+        # Assert
+        assert diff.identical is True
+
+    def test_pip_executable_location_is_not_content_drift(self):
+        # Arrange
+        lg = _lockgen()
+        a = _make_lock(pip={"numpy": "2.1.0"}, pip_executable="/usr/bin/pip")
+        b = _make_lock(
+            pip={"numpy": "2.1.0"}, pip_executable="/opt/venv/bin/pip"
+        )
         # Act
         diff = lg.compare_locks(a, b)
         # Assert
