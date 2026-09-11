@@ -22,6 +22,8 @@ The on-disk ``.lock`` format is a single text file with section headers
 so a human can read it and ``compare_locks`` can parse it back::
 
     # scitex-container lock
+    [metadata]
+    pip_executable=/opt/example-venv/bin/pip
     [pip]
     numpy==2.1.0
     ...
@@ -37,6 +39,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import shlex
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -47,7 +50,7 @@ from ._utils import detect_container_cmd
 
 logger = logging.getLogger(__name__)
 
-_SECTIONS = ("pip", "dpkg", "node")
+_SECTIONS = ("metadata", "pip", "dpkg", "node")
 
 
 @dataclass
@@ -59,6 +62,7 @@ class Lock:
     version set for node globals).
     """
 
+    pip_executable: str = ""
     pip: dict[str, str] = field(default_factory=dict)
     dpkg: dict[str, str] = field(default_factory=dict)
     node: str = ""
@@ -66,6 +70,8 @@ class Lock:
     def version_set(self) -> dict[str, str]:
         """Flat ``{qualified_name: version}`` map for set comparison.
 
+        ``pip_executable`` is replay-target metadata, not installed content,
+        so it is intentionally excluded from reproducibility comparison.
         node packages are flattened from the npm JSON into
         ``node:<name> -> <version>`` entries so a node-global drift is
         caught by the same comparison as pip/dpkg.
@@ -166,6 +172,9 @@ def capture_lock(
         pip_out = _exec_capture(cmd, sif_path, [pip_bin, "freeze"])
         if pip_out.strip():
             lock.pip = _parse_pip_freeze(pip_out)
+            lock.pip_executable = _exec_capture(
+                cmd, sif_path, ["sh", "-c", f"command -v {pip_bin}"]
+            ).strip()
             break
 
     dpkg_out = _exec_capture(
@@ -204,6 +213,7 @@ def _exec_capture(cmd: str, sif_path: Path, argv: list[str]) -> str:
         [cmd, "exec", "--cleanenv", "--no-home", str(sif_path), *argv],
         capture_output=True,
         text=True,
+        check=False,
     )
     return result.stdout if result.returncode == 0 else ""
 
@@ -214,7 +224,10 @@ def write_lock(lock: Lock, lock_path: str | Path) -> Path:
     lock_path = Path(lock_path)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
 
-    lines = ["# scitex-container lock", "[pip]"]
+    lines = ["# scitex-container lock", "[metadata]"]
+    if lock.pip_executable:
+        lines.append(f"pip_executable={lock.pip_executable}")
+    lines.append("[pip]")
     for name in sorted(lock.pip):
         ver = lock.pip[name]
         lines.append(f"{name}=={ver}" if ver else name)
@@ -246,7 +259,10 @@ def read_lock(lock_path: str | Path) -> Lock:
         if m and m.group(1) in _SECTIONS:
             section = m.group(1)
             continue
-        if section == "pip":
+        if section == "metadata":
+            if stripped.startswith("pip_executable="):
+                lock.pip_executable = stripped.split("=", 1)[1].strip()
+        elif section == "pip":
             if not stripped:
                 continue
             if "==" in stripped:
@@ -320,18 +336,36 @@ def generate_locked_def(
         for pin in pins:
             stanza_lines.append(f"{pin}")
         stanza_lines.append("SCITEX_PINS")
-        # Pick the pip the base ships (pip / pip3) and add
-        # --break-system-packages only when this pip understands it
+        # Replay through the same pip environment captured from the rough
+        # image.  This matters when the recipe's runtime PATH selects a venv
+        # that Apptainer does not expose while running %post.  Older locks do
+        # not carry this metadata, so retain system pip as a safe fallback.
+        # Add --break-system-packages only when this pip understands it
         # (PEP 668 environments: Ubuntu 24.04, Debian 12, alpine 3.19+).
         # --no-deps: pin exactly the captured set without re-resolving.
+        # --ignore-installed: do not ask pip to uninstall distributions owned
+        # by the base image's package manager.  Debian/Ubuntu Python packages
+        # may have no RECORD file, so an uninstall attempt fails before the
+        # pinned wheel can be installed.  Installing the wheel alongside the
+        # distro package leaves dpkg ownership intact while the pip-installed
+        # copy takes precedence on Python's import path.
+        pip_executable = shlex.quote(lock.pip_executable)
         stanza_lines += [
-            '    _pip="$(command -v pip3 || command -v pip)"',
+            f"    _pip={pip_executable}" if pip_executable else '    _pip=""',
+            '    if [ ! -x "$_pip" ]; then',
+            '        _pip="$(command -v pip3 || command -v pip)"',
+            "    fi",
             '    _bsp=""',
-            '    if "$_pip" install --help 2>/dev/null | grep -q -- '
-            "--break-system-packages; then",
+            (
+                '    if "$_pip" install --help 2>/dev/null | grep -q -- '
+                "--break-system-packages; then"
+            ),
             '        _bsp="--break-system-packages"',
             "    fi",
-            '    "$_pip" install --no-deps $_bsp -r /tmp/scitex-pins.txt',
+            (
+                '    "$_pip" install --ignore-installed --no-deps $_bsp '
+                "-r /tmp/scitex-pins.txt"
+            ),
             "    rm -f /tmp/scitex-pins.txt",
         ]
     else:
