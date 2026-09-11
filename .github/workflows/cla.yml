@@ -23,31 +23,7 @@ permissions:
   statuses: write
 
 jobs:
-  owner-pr-bypass:
-    name: CLAssistant
-    if: >-
-      github.event_name == 'pull_request_target' &&
-      github.actor == 'ywatanabe1989'
-    runs-on: ${{ fromJSON(vars.LIGHT_RUNS_ON || vars.CI_RUNS_ON || '["self-hosted","Linux","X64","scitex-ci"]') }}
-    permissions:
-      statuses: write
-    steps:
-      - name: Mark the owner-authored PR head as accepted
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          gh api "repos/${REPO}/statuses/${SHA}" \
-            -f state=success \
-            -f context=CLAssistant \
-            -f description="Owner-authored pull request (CLA allowlist bypass)"
-
   call:
-    if: >-
-      github.event_name != 'pull_request_target' ||
-      github.actor != 'ywatanabe1989'
     uses: scitex-ai/.github/.github/workflows/cla.yml@main
     with:
       owner_allowlist: "bot*,ywatanabe1989,LLEmacs"
