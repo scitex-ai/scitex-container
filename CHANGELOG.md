@@ -7,6 +7,29 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.3]
+
+### Fixed
+
+- **Reproducible Apptainer builds now publish safely to symlinked artifact
+  stores on another filesystem.** Rough and verification builds are placed on
+  the canonical artifact filesystem instead of filling the filesystem that
+  hosts the logical store path. If a relocation still crosses devices, the
+  completed SIF is copied to a destination-local temporary file, synced, and
+  atomically published; a failed copy leaves the previous canonical SIF intact.
+
+- **Only verified reproducible builds become active.** Stable boot symlinks are
+  updated after round-trip verification succeeds, so a failed verification
+  cannot expose an unverified image as the current version.
+
+- **Locked replay preserves distribution packages as well as Python packages.**
+  The generated definition installs the captured distro package set during the
+  verification rebuild rather than silently replaying only pip dependencies.
+
+- **The optional cross-package import gate now detects missing peer submodules.**
+  It still skips an absent optional peer package, but fails when an installed
+  peer no longer provides a required import path.
+
 ## [0.4.2]
 
 ### Changed
