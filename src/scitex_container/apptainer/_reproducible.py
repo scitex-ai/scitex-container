@@ -335,15 +335,44 @@ def _relocate_file(source: Path, destination: Path) -> None:
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent
     )
-    os.close(descriptor)
     temporary = Path(temporary_name)
     try:
-        shutil.copy2(source, temporary)
+        # Do not publish until every source byte and its metadata are durable in
+        # the destination filesystem.  Keeping the mkstemp descriptor open also
+        # prevents a path substitution between creation and copying.
+        with source.open("rb") as source_stream, os.fdopen(
+            descriptor, "wb"
+        ) as temporary_stream:
+            descriptor = -1
+            shutil.copyfileobj(source_stream, temporary_stream)
+            temporary_stream.flush()
+            shutil.copystat(source, temporary)
+            os.fsync(temporary_stream.fileno())
+
         os.replace(temporary, destination)
+        _fsync_directory(destination.parent)
         source.unlink()
+        _fsync_directory(source.parent)
     finally:
+        if descriptor >= 0:
+            os.close(descriptor)
         if temporary.exists():
             temporary.unlink()
+
+
+def _fsync_directory(directory: Path) -> None:
+    """Persist a directory mutation when its filesystem supports directory fsync."""
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    descriptor = os.open(directory, flags)
+    try:
+        try:
+            os.fsync(descriptor)
+        except OSError as error:
+            unsupported = {errno.EINVAL, getattr(errno, "ENOTSUP", errno.EINVAL)}
+            if error.errno not in unsupported:
+                raise
+    finally:
+        os.close(descriptor)
 
 
 def _preserve_build_log(

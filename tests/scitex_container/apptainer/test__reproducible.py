@@ -428,6 +428,21 @@ class TestPreserveBuildLog:
 class TestRelocateFileAcrossDevices:
     """Canonical artifact directories may be symlinks onto scratch storage."""
 
+    def test_same_filesystem_replaces_existing_destination(self, tmp_path):
+        # Arrange
+        r = _repro()
+        source = tmp_path / "rough.sif"
+        destination = tmp_path / "canonical.sif"
+        source.write_bytes(b"new-sif")
+        destination.write_bytes(b"old-sif")
+
+        # Act
+        r._relocate_file(source, destination)
+
+        # Assert
+        observed = (destination.read_bytes(), source.exists())
+        assert observed == (b"new-sif", False)
+
     def test_installs_through_cross_device_symlink(
         self, tmp_path, cross_device_target
     ):
@@ -435,6 +450,7 @@ class TestRelocateFileAcrossDevices:
         r = _repro()
         source = tmp_path / "rough.sif"
         source.write_bytes(b"complete-sif")
+        source.chmod(0o640)
         canonical_parent = tmp_path / "canonical"
         canonical_parent.symlink_to(cross_device_target, target_is_directory=True)
         destination = canonical_parent / "base.sif"
@@ -445,10 +461,37 @@ class TestRelocateFileAcrossDevices:
         # Assert
         observed = (
             destination.read_bytes(),
+            destination.stat().st_mode & 0o777,
             source.exists(),
             list(cross_device_target.glob(".base.sif.*.tmp")),
         )
-        assert observed == (b"complete-sif", False, [])
+        assert observed == (b"complete-sif", 0o640, False, [])
+
+    def test_copy_failure_keeps_existing_canonical_and_cleans_temporary(
+        self, tmp_path, cross_device_target
+    ):
+        # Arrange
+        r = _repro()
+        source = tmp_path / "rough.sif"
+        source.mkdir()
+        destination = cross_device_target / "base.sif"
+        destination.write_bytes(b"previous-valid-sif")
+        caught = None
+
+        # Act
+        try:
+            r._relocate_file(source, destination)
+        except OSError as error:
+            caught = error
+
+        # Assert
+        observed = (
+            isinstance(caught, IsADirectoryError),
+            destination.read_bytes(),
+            source.is_dir(),
+            list(cross_device_target.glob(".base.sif.*.tmp")),
+        )
+        assert observed == (True, b"previous-valid-sif", True, [])
 
 
 # EOF
