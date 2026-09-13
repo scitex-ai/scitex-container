@@ -472,6 +472,10 @@ def verify_roundtrip(
             def_path=ap.locked_def,
             image_name=verify_name,
             cwd=cwd,
+            # The compressed rough SIF is a deterministic lower bound. The
+            # runtime generally needs more while constructing the unpacked
+            # root filesystem, but less than this is certainly unsafe.
+            minimum_tmp_bytes=ap.sif.stat().st_size,
         )
         rebuild_lock = capture_lock(verify_sif, verify_lock_path)
         diff = compare_locks(rough_lock, rebuild_lock)

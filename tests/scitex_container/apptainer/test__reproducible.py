@@ -197,6 +197,23 @@ class TestVerifyRoundtripForwardsCwd:
         # Assert
         assert recording_build[0]["cwd"] == staging
 
+    def test_replay_requires_at_least_rough_sif_size(self, tmp_path, recording_build):
+        # Arrange
+        r = _repro()
+        from scitex_container.apptainer import _store as s
+
+        ap = s.artifact_paths(tmp_path, "base", "2026-0812-100000")
+        ap.layer_dir.mkdir(parents=True)
+        ap.sif.write_bytes(b"known-rough-sif")
+        ap.locked_def.write_text("Bootstrap: docker\nFrom: alpine:3.19\n")
+        ap.lock.write_text("# scitex-container lock\n[pip]\n[dpkg]\n[node]\n")
+
+        # Act
+        r.verify_roundtrip("base", tmp_path, "2026-0812-100000")
+
+        # Assert
+        assert recording_build[0]["minimum_tmp_bytes"] == ap.sif.stat().st_size
+
     def test_rebuilds_on_symlinked_canonical_filesystem(
         self, tmp_path, recording_build, cross_device_target
     ):

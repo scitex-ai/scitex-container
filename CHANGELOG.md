@@ -7,6 +7,14 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Route Apptainer/Singularity temporary and cache storage deterministically:
+  preserve explicit runtime overrides, promote an explicit `TMPDIR`, otherwise
+  colocate build storage with the physical artifact filesystem, and preserve
+  it through `sudo -E`. Reproducible replay now fails before launching when
+  the selected temp filesystem cannot hold even the rough SIF lower bound.
+
 ## [0.4.3]
 
 ### Fixed

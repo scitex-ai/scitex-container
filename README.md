@@ -189,6 +189,25 @@ status = scitex_container.apptainer.check_verified(
 )
 ```
 
+### Build storage
+
+Container builds do not silently depend on the host's `/tmp` or home
+filesystem. `scitex-container` resolves Apptainer/Singularity build storage in
+this order:
+
+1. an explicit runtime override (`APPTAINER_TMPDIR` /
+   `SINGULARITY_TMPDIR`),
+2. an explicit `TMPDIR`,
+3. scratch directories on the physical output-artifact filesystem.
+
+Explicit `APPTAINER_CACHEDIR` / `SINGULARITY_CACHEDIR` values are also
+preserved; otherwise the cache is colocated with the selected build storage.
+The resolved paths are logged for every build and are preserved through
+`sudo`. A reproducible verification also checks that its temp filesystem has
+at least the rough SIF's size free before launching the replay. This is a
+lower bound: Apptainer needs enough space for the whole uncompressed image and
+temporary files.
+
 </details>
 
 </details>
