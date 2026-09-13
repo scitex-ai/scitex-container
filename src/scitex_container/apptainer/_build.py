@@ -55,6 +55,7 @@ from pathlib import Path
 from scitex_container._compat import supports_return_as
 
 from . import _store
+from ._build_storage import prepare_build_environment
 from ._utils import detect_container_cmd, find_containers_dir
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ def build(
     fakeroot: bool | None = None,
     cwd: str | Path | None = None,
     retain: int | None = None,
+    minimum_tmp_bytes: int = 0,
 ) -> Path:
     """Build Apptainer/Singularity SIF or sandbox from .def file.
 
@@ -122,6 +124,10 @@ def build(
         pruned after a successful build. Defaults to the image config's
         ``retain`` resolved from ``output_dir`` (via ``_store.prune``,
         the same retention the reproducible store uses). SIF builds only.
+    minimum_tmp_bytes : int
+        Known lower bound for free runtime build-temp space. Reproducible
+        verification supplies the rough SIF size; the runtime can require
+        more while constructing its uncompressed root filesystem.
 
     Returns
     -------
@@ -184,6 +190,7 @@ def build(
         use_sudo=use_sudo,
         fakeroot=fakeroot,
         retain=retain,
+        minimum_tmp_bytes=minimum_tmp_bytes,
     )
 
 
@@ -199,6 +206,7 @@ def _build_sif(
     use_sudo: bool,
     fakeroot: bool | None,
     retain: int | None,
+    minimum_tmp_bytes: int,
 ) -> Path:
     """Atomic timestamped SIF build with dual stable-symlink publish."""
     hash_file = image_dir / ".def-hash"
@@ -223,7 +231,7 @@ def _build_sif(
     # off by default (caller can override).
     fakeroot = False if fakeroot is None else fakeroot
 
-    privilege_args: list[str] = ["sudo"] if use_sudo else []
+    privilege_args: list[str] = ["sudo", "-E"] if use_sudo else []
     flag_args: list[str] = []
     if fakeroot:
         flag_args += ["--fakeroot"]
@@ -242,12 +250,24 @@ def _build_sif(
     ]
 
     logger.info("Build log → %s (cwd=%s)", log_path, build_cwd)
+    build_env = prepare_build_environment(
+        runtime=cmd,
+        build_root=image_dir.parent,
+        minimum_tmp_bytes=minimum_tmp_bytes,
+    )
+    logger.info(
+        "Build storage: tmp=%s cache=%s",
+        build_env.get("APPTAINER_TMPDIR") or build_env.get("SINGULARITY_TMPDIR"),
+        build_env.get("APPTAINER_CACHEDIR") or build_env.get("SINGULARITY_CACHEDIR"),
+    )
     with open(log_path, "wb") as log_fh:
         result = subprocess.run(
             build_args,
             cwd=str(build_cwd),
+            env=build_env,
             stdout=log_fh,
             stderr=subprocess.STDOUT,
+            check=False,
         )
     if result.returncode != 0:
         # The live symlinks were never touched — remove only the partial
@@ -354,7 +374,7 @@ def _build_sandbox(
     # build user; on by default (caller can override).
     fakeroot = True if fakeroot is None else fakeroot
 
-    privilege_args: list[str] = ["sudo"] if use_sudo else []
+    privilege_args: list[str] = ["sudo", "-E"] if use_sudo else []
     flag_args: list[str] = ["--sandbox"]
     if fakeroot:
         flag_args += ["--fakeroot"]
@@ -371,12 +391,18 @@ def _build_sandbox(
     ]
 
     logger.info("Build log → %s (cwd=%s)", log_path, build_cwd)
+    build_env = prepare_build_environment(
+        runtime=cmd,
+        build_root=image_dir.parent,
+    )
     with open(log_path, "wb") as log_fh:
         result = subprocess.run(
             build_args,
             cwd=str(build_cwd),
+            env=build_env,
             stdout=log_fh,
             stderr=subprocess.STDOUT,
+            check=False,
         )
     if result.returncode != 0:
         raise RuntimeError(
