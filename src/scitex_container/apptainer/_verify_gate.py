@@ -23,15 +23,16 @@ Re-exported from ``_reproducible`` so existing imports keep resolving.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
 from ._config import ImageConfig, load_config
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 class VerifyError(RuntimeError):

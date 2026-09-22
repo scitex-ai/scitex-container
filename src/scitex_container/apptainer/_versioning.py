@@ -9,15 +9,16 @@ Supports both SIF images (scitex-v*.sif) and sandbox directories
 
 from __future__ import annotations
 
-import logging
 import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 _VERSION_RE = re.compile(r"^scitex-v(.+)\.sif$")
 _BASE_RE = re.compile(r"^scitex-base-v(\d+)\.sif$")
