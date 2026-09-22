@@ -16,6 +16,7 @@
 <p align="center">
   <a href="https://pypi.org/project/scitex-container/"><img src="https://img.shields.io/pypi/v/scitex-container?label=pypi" alt="pypi"></a>
   <a href="https://pypi.org/project/scitex-container/"><img src="https://img.shields.io/pypi/pyversions/scitex-container?label=python" alt="python"></a>
+  <a href='https://scitex-container.readthedocs.io/en/latest/'><img src='https://img.shields.io/readthedocs/scitex-container?label=docs' alt='Read the Docs'></a>
   <a href="https://github.com/ywatanabe1989/scitex-container/actions/workflows/rtd-sphinx-build-on-ubuntu-latest.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-container/rtd-sphinx-build-on-ubuntu-latest.yml?branch=develop&label=docs" alt="docs"></a>
 </p>
 <p align="center">
@@ -30,77 +31,19 @@
 
 ## Problem and Solution
 
+
+
+
 | # | Problem | Solution |
 |---|---------|----------|
 | 1 | **"Reproducible" containers drift** -- `Dockerfile` builds a different image each time because `apt-get install python3` floats | **Versioned SIF** -- `scitex-container build` pins the image content hash; `switch-version 2.19.5` is an atomic symlink flip |
-| 2 | **Rollback requires docker tags + manual surgery** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
+| 2 | **Rollback is one command** -- something breaks in prod; reverting to yesterday's container is 15 minutes of yak-shaving with docker tags and manual surgery | **`rollback` is one command** -- previous active SIF restored; sandbox state preserved |
 | 3 | **Paper "env" is `pip freeze`** -- useless without the python version, OS libs, CUDA driver | **`env_snapshot()`** -- full reproducibility capsule: container tag + pip freeze + conda env + apt packages + git commits, serialized as a single file for manuscript attachments |
 
-## Architecture
-
-```
-scitex-container/
-├── src/scitex_container/
-│   ├── __init__.py              # apptainer, docker, host, env_snapshot + MCP-parity re-exports
-│   ├── apptainer/
-│   │   ├── _build.py            # build SIF / sandbox from .def (pinned hash)
-│   │   ├── _config.py           # reproducible-build config (retain, require_verified)
-│   │   ├── _freeze.py           # extract pip/dpkg/npm lock files from built SIF
-│   │   ├── _lockgen.py          # lock capture, locked-def generation, version-set comparison
-│   │   ├── _reproducible.py     # self-verifying reproducible-build round-trip + use-time verify gate
-│   │   ├── _store.py            # timestamped (sif, lock) artifact store
-│   │   ├── _versioning.py       # list / switch / rollback / deploy SIF versions
-│   │   ├── _sandbox.py          # sandbox create / maintain / update / to-sif
-│   │   ├── _sandbox_versioning.py # sandbox list / switch / rollback / cleanup
-│   │   ├── _status.py           # list available containers and build status
-│   │   ├── _utils.py            # shared utilities (detect container cmd, find containers dir)
-│   │   └── _verify.py           # SIF + lock-file integrity
-│   ├── docker/                  # rebuild / restart compose services
-│   │   ├── _compose.py          # compose helpers
-│   │   └── _mounts.py           # bind mount helpers
-│   ├── host/                    # TeX Live, ImageMagick, bind mounts
-│   │   ├── _mounts.py           # mount configuration
-│   │   └── _packages.py         # install / check host packages
-│   ├── _snapshot.py             # env_snapshot(): container + host + git + lock files
-│   ├── _mcp/                    # MCP handler implementations
-│   │   └── handlers.py          # async handlers: build, list, switch, rollback, deploy, etc.
-│   ├── _cli/                    # scitex-container CLI entrypoint
-│   │   ├── __init__.py          # main click group with all subcommands
-│   │   ├── _apptainer.py        # apptainer sub-commands (build, freeze, list, switch, etc.)
-│   │   ├── _docker.py           # docker sub-commands (rebuild, restart)
-│   │   ├── _host.py             # host sub-commands (install, check, show-mounts)
-│   │   ├── _sandbox.py          # sandbox sub-commands (create, maintain, list, switch, etc.)
-│   │   ├── _status.py           # show-status dashboard
-│   │   ├── _env_snapshot.py     # save-env-snapshot command
-│   │   ├── _mcp.py              # mcp sub-commands (start, doctor, list-tools, install)
-│   │   └── _skills.py           # skills list / get / install
-│   ├── _compat.py               # compatibility shim for optional scitex-dev dependency
-│   ├── mcp_server.py            # MCP server (optional, via fastmcp)
-│   └── _skills/scitex-container/# bundled agent skill files
-└── tests/
-```
-
-## Installation
-
-Requires Python >= 3.10.
-
-```bash
-pip install scitex-container
-```
-
-With MCP server support (for AI agent integration):
-
-```bash
-pip install scitex-container[mcp]
-```
-
-Full installation:
-
-```bash
-pip install scitex-container[all]
-```
-
 ## Quick Start
+
+
+
 
 ```bash
 # Unified status dashboard
@@ -118,7 +61,85 @@ scitex-container apptainer rollback
 scitex-container --help-recursive
 ```
 
+## Demo
+
+
+
+
+```mermaid
+sequenceDiagram
+    participant U as user
+    participant SC as scitex-container
+    participant FS as /opt/containers
+    U->>SC: apptainer build --def-name scitex-final
+    SC->>FS: scitex-final.sif (pinned)
+    U->>SC: apptainer switch 2.19.5
+    SC->>FS: current.sif -> scitex-final-2.19.5.sif
+    U->>SC: apptainer rollback
+    SC->>FS: current.sif -> scitex-final-2.19.6.sif
+    U->>SC: save-env-snapshot
+    SC-->>U: snapshot.json (SIF hash + pip + dpkg + git + host)
+```
+
+<p align="center"><sub><b>Figure 2.</b> Typical session: build a pinned SIF, flip the active version, roll back on failure, and capture a reproducibility snapshot for the manuscript.</sub></p>
+
+## Installation
+
+
+
+
+```bash
+uv pip install "scitex-container[all]"
+```
+
+Requires Python >= 3.10.
+
+<details>
+<summary><b>Per-module extras</b></summary>
+
+<br>
+
+| Extra | Pulls in |
+|---|---|
+| `mcp` | fastmcp (MCP server for agents) |
+| `all` | `mcp` (recommended) |
+| `dev` | pytest, pytest-cov, pytest-timeout + every optional dep so the test suite runs |
+| `docs` | Sphinx + RTD theme + myst-parser (docs build only) |
+
+```bash
+uv pip install "scitex-container[mcp]"   # MCP server only
+uv pip install -e ".[dev]"               # editable install for contributors
+```
+
+</details>
+
+## Architecture
+
+
+
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 40, 'curve': 'linear'}, 'themeVariables': {'fontSize': '12px'}}}%%
+flowchart LR
+    DEF[".def recipe"] --> BUILD["apptainer build"]
+    BUILD --> SIF["scitex-v*.sif"]
+    SIF --> FREEZE["freeze locks"]
+    FREEZE --> VERIFY["verify gate"]
+    VERIFY --> STORE["versioned store"]
+    STORE --> SWITCH{"switch / rollback"}
+    SWITCH --> ACTIVE["current.sif"]
+    ACTIVE --> DEPLOY["deploy to prod"]
+    ACTIVE --> SB["sandbox create"]
+    SB --> MAINT["maintain / update"]
+    MAINT --> SIF2["to-sif"]
+```
+
+<p align="center"><sub><b>Figure 1.</b> Reproducible container lifecycle: a .def recipe builds a pinned SIF, lock files freeze its contents, the verify gate checks integrity, the versioned store keeps history, and switch/rollback flips the active symlink atomically.</sub></p>
+
 ## Four Interfaces
+
+
+
 
 <details open>
 <summary><strong>Python API</strong></summary>
@@ -335,24 +356,10 @@ scitex-dev skills export --package scitex-container  # Export to Claude Code
 
 </details>
 
-## Demo
-
-```mermaid
-sequenceDiagram
-    participant U as user
-    participant SC as scitex-container
-    participant FS as /opt/containers
-    U->>SC: apptainer build --def-name scitex-final
-    SC->>FS: scitex-final.sif (pinned)
-    U->>SC: apptainer switch 2.19.5
-    SC->>FS: current.sif -> scitex-final-2.19.5.sif
-    U->>SC: apptainer rollback
-    SC->>FS: current.sif -> scitex-final-2.19.6.sif
-    U->>SC: save-env-snapshot
-    SC-->>U: snapshot.json (SIF hash + pip + dpkg + git + host)
-```
-
 ## Part of SciTeX
+
+
+
 
 `scitex-container` is part of [**SciTeX**](https://scitex.ai). Install via
 the umbrella with `pip install scitex[container]` to use as
