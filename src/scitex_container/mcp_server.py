@@ -12,6 +12,10 @@ from __future__ import annotations
 
 from scitex_dev import try_import_optional
 
+import scitex_logging as slogging
+
+log = slogging.getLogger(__name__)
+
 FastMCP = try_import_optional("fastmcp", "FastMCP", extra="mcp", pkg="scitex-container")
 FASTMCP_AVAILABLE = FastMCP is not None
 
@@ -361,9 +365,9 @@ def main() -> None:
     if not FASTMCP_AVAILABLE:
         import sys
 
-        print("=" * 60)
-        print("fastmcp is required: pip install 'scitex-container[mcp]'")
-        print("=" * 60)
+        log.error("=" * 60)
+        log.error("fastmcp is required: pip install 'scitex-container[mcp]'")
+        log.error("=" * 60)
         sys.exit(1)
 
     mcp.run(transport="stdio")

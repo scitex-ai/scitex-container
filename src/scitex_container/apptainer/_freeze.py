@@ -5,15 +5,16 @@
 
 from __future__ import annotations
 
-import logging
 import subprocess
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
 from ._utils import detect_container_cmd
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 @supports_return_as

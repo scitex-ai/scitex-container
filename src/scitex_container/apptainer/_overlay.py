@@ -27,14 +27,15 @@ config files, matching the pure-builder + thin-action convention in
 
 from __future__ import annotations
 
-import logging
 import math
 import subprocess
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 @supports_return_as

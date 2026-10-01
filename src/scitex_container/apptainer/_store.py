@@ -28,15 +28,16 @@ lock capture + locked-def generation live in ``_lockgen.py``.
 from __future__ import annotations
 
 import datetime as _dt
-import logging
 import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 # <layer>-<YYYY-MMDD-HHMMSS>.sif — the timestamp shape mirrors the
 # existing build-log timestamp (``_dt.strftime("%Y-%m%d-%H%M%S")``).

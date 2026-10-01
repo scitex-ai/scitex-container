@@ -6,15 +6,16 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 from datetime import datetime
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
 from ._utils import find_containers_dir
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 @supports_return_as

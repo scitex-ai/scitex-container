@@ -6,15 +6,16 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 import subprocess
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
 from ._utils import detect_container_cmd
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 def _hash_file(path: Path, chunk_size: int = 8192) -> str:

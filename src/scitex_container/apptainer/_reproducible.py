@@ -36,13 +36,14 @@ injection); it never reads a consumer's config location.
 from __future__ import annotations
 
 import errno
-import logging
 import os
 import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
 from . import _store
@@ -56,7 +57,7 @@ from ._lockgen import (
     read_lock,
 )
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 # The use-time gate (``check_verified`` + its types) lives in

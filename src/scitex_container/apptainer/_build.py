@@ -47,18 +47,19 @@ build context can set it independently of where the SIF lands.
 from __future__ import annotations
 
 import hashlib
-import logging
 import shutil
 import subprocess
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 
 from . import _store
 from ._build_storage import prepare_build_environment
 from ._utils import detect_container_cmd, find_containers_dir
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 
 @supports_return_as

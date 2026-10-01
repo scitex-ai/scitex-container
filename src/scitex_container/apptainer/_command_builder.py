@@ -9,16 +9,17 @@ has no dependency on Django settings or any project-specific config files.
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
+
+import scitex_logging as slogging
 from scitex_container._compat import supports_return_as
 from scitex_container.apptainer._shell_command import (
     _build_shell_command,
     build_shell_in_allocation_command as build_shell_in_allocation_command,
 )
 
-logger = logging.getLogger(__name__)
+logger = slogging.getLogger(__name__)
 
 # TeX Live binary names to bind-mount from the host prefix
 _TEXLIVE_BINS = [

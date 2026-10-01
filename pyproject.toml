@@ -20,6 +20,7 @@ dependencies = [
     "pyyaml",                # reproducible-build config at <root>/config.yaml
     "scitex-dev>=0.11.7",
     "scitex-config>=0.3.0",
+    "scitex-logging>=0.1.0",
 ]
 
 [project.optional-dependencies]
@@ -66,6 +67,10 @@ packages = ["src/scitex_container"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+markers = [
+    "smoke: fast CLI happy-path tests (<60s, runs on every PR)",
+    "e2e: end-to-end workflows against real subsystems (runs on every PR)",
+]
 
 [tool.scitex-linter]
 library_dirs = ["src", "tests", "examples"]
