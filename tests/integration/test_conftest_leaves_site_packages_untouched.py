@@ -49,9 +49,7 @@ assert os.environ.get("COVERAGE_FILE") == "__SENTINEL_COVERAGE_FILE__", "COVERAG
 
 def test_conftest_leaves_site_packages_untouched():
     # Arrange
-    conftest = str(Path(__file__).resolve().parents[1] / "conftest.py")
-    assert Path(conftest).is_file()
-    cmd = [sys.executable, "-c", _CHILD_CODE, conftest]
+    cmd = [sys.executable, "-c", _CHILD_CODE, str(CONFTEST_PATH)]
 
     # Act
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
