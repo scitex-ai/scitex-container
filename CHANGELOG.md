@@ -9,6 +9,7 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Configure subprocess coverage declaratively via coverage.py `patch = ["subprocess"]` (coverage>=7.10); `tests/conftest.py` no longer writes `.pth` files into site-packages or overwrites `COVERAGE_PROCESS_START`/`COVERAGE_FILE`.
 - Route Apptainer/Singularity temporary and cache storage deterministically:
   preserve explicit runtime overrides, promote an explicit `TMPDIR`, otherwise
   colocate build storage with the physical artifact filesystem, and preserve
