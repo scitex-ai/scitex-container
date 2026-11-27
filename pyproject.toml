@@ -28,8 +28,9 @@ mcp = [
     "fastmcp>=2.0.0",
 ]
 dev = [
+    "coverage[toml]>=7.13.0",
     "fastmcp>=2.0.0",                # tests/integration/test_skills_quality.py + mcp tool surface
-    "pytest-cov>=4.0.0",
+    "pytest-cov>=7.0.0",
     "pytest>=7.0.0",
     "pytest-timeout>=2.0.0",         # .github/workflows/test.yml uses --timeout=120
     "scitex-dev[cli-audit]>=0.11.7", # tests/develop/test_audit.py needs the `scitex-dev` CLI
@@ -106,6 +107,7 @@ mcp_tools_allowlist = [
 
 [tool.coverage.run]
 parallel = true
+patch = ["subprocess"]
 source = ["scitex_container"]
 concurrency = ["multiprocessing", "thread"]
 
